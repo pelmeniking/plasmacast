@@ -194,7 +194,7 @@ cmd_setup_kde() {
   local code
   code=$(key_code "$key") || die "can't parse key '$key'; use e.g. Alt+Space, Meta+Space, Ctrl+Alt+K"
 
-  local owner plan=()
+  local owner plan=() i
   owner=$(key_owner "$code")
   if [[ -n $owner && $owner != "$DESKTOP_ID" && $owner != org.kde.krunner.desktop ]]; then
     die "$key is already used by $owner; free it in System Settings › Keyboard › Shortcuts, or pick another with --key"
@@ -216,6 +216,18 @@ cmd_setup_kde() {
     echo "removed $key from KRunner (old keys saved in $krunner_backup)"
   fi
 
+  # kglobalaccel keeps the service it loaded and only re-reads a desktop
+  # file when the component is created. When the entry already exists (say
+  # the checkout moved), drop it first so the new Exec line is picked up.
+  if [[ -f $desktop_file ]] && command -v kbuildsycoca6 >/dev/null; then
+    rm "$desktop_file"
+    kbuildsycoca6 >/dev/null 2>&1
+    for i in $(seq 1 30); do
+      kga shortcutKeys "$OMACAST_ID" 2>/dev/null | key_codes | grep -q . || break
+      sleep 0.1
+    done
+  fi
+
   mkdir -p "$(dirname "$desktop_file")"
   cat >"$desktop_file" <<DESKTOP
 [Desktop Entry]
@@ -233,7 +245,6 @@ DESKTOP
 
   # kglobalaccel picks up new X-KDE-Shortcuts entries when ksycoca changes.
   command -v kbuildsycoca6 >/dev/null && kbuildsycoca6 >/dev/null 2>&1
-  local i
   for i in $(seq 1 50); do
     if kga shortcutKeys "$OMACAST_ID" 2>/dev/null | key_codes | grep -qx "$code"; then
       echo "$key toggles omacast"

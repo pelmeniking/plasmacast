@@ -45,6 +45,7 @@ esac
 desktop="$XDG_DATA_HOME/applications/omacast.desktop"; f=${JSON.stringify(state)}/omacast.desktop
 if [[ ! -f $desktop ]]; then rm -f "$f"; exit 0; fi
 [[ -f $f ]] && exit 0
+grep -m1 '^Exec=' "$desktop" >"$f.exec"
 grep -qx ${ALT_SPACE} ${JSON.stringify(state)}/* 2>/dev/null && { : >"$f"; exit 0; }
 echo ${ALT_SPACE} >"$f"
 `)
@@ -55,8 +56,9 @@ echo ${ALT_SPACE} >"$f"
     PATH: bin + ":" + process.env.PATH
   }
   const run = (...args) => spawnSync(cli, args, { env, encoding: "utf8" })
+  const loadedExec = () => fs.readFileSync(path.join(state, "omacast.desktop.exec"), "utf8").trim()
   const keys = (component) => fs.readFileSync(path.join(state, component), "utf8").split("\n").filter(Boolean).map(Number)
-  return { home, env, run, keys, state }
+  return { home, env, run, keys, state, loadedExec }
 }
 
 test("setup kde takes Alt+Space from KRunner, binds omacast, and uninstall gives it back", (t) => {
@@ -121,4 +123,19 @@ test("install writes a systemd user unit that runs this checkout's shell.qml", (
   assert.match(unit, /^ExecStart="[^"]*\/qs" -p ".*\/shell\.qml"$/m)
   assert.match(unit, /^WantedBy=graphical-session\.target$/m)
   assert.equal(fs.readlinkSync(kde.home + "/.local/bin/omacast"), cli)
+})
+
+test("rerunning setup kde after the checkout moved makes KDE load the new Exec line", (t) => {
+  const kde = fakeKde(t)
+  assert.equal(kde.run("setup", "kde", "--yes").status, 0)
+  const file = kde.home + "/.local/share/applications/omacast.desktop"
+  // What KDE loaded first; simulate a desktop file written from another path.
+  fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace(/^Exec=.*$/m, 'Exec="/usr/bin/qs" ipc -p "/old/place/shell.qml" call omacast toggle'))
+  fs.rmSync(path.join(kde.state, "omacast.desktop"))
+  spawnSync(path.join(kde.home, "bin/kbuildsycoca6"), [], { env: kde.env })
+  assert.match(kde.loadedExec(), /old\/place/)
+  const r = kde.run("setup", "kde", "--yes")
+  assert.equal(r.status, 0, r.stdout + r.stderr)
+  assert.match(kde.loadedExec(), new RegExp(root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "/shell\\.qml"))
+  assert.deepEqual(kde.keys("omacast.desktop"), [ALT_SPACE])
 })
