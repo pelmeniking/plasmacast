@@ -1,15 +1,15 @@
 #!/bin/bash
-# omacast CLI, KDE Plasma edition.
+# plasmacast CLI, KDE Plasma edition.
 #
-# omacast runs as its own Quickshell instance (qs -p <checkout>/shell.qml),
+# plasmacast runs as its own Quickshell instance (qs -p <checkout>/shell.qml),
 # started by a systemd user service. Every command below talks to that
 # instance over Quickshell's IPC.
 
 set -uo pipefail
 
-IPC_TARGET="omacast"
-SERVICE="omacast.service"
-DESKTOP_ID="omacast.desktop"
+IPC_TARGET="plasmacast"
+SERVICE="plasmacast.service"
+DESKTOP_ID="plasmacast.desktop"
 
 self=$(readlink -f "${BASH_SOURCE[0]}")
 repo=$(cd "$(dirname "$self")/.." && pwd -P)
@@ -18,21 +18,27 @@ config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
 unit_file="$config_home/systemd/user/$SERVICE"
 desktop_file="$data_home/applications/$DESKTOP_ID"
-krunner_backup="$config_home/omacast/krunner-shortcut"
-cli_link="$HOME/.local/bin/omacast"
+krunner_backup="$config_home/plasmacast/krunner-shortcut"
+cli_link="$HOME/.local/bin/plasmacast"
+# Names this KDE port had before it became plasmacast; install and setup
+# clean them up.
+LEGACY_NAME="omacast"
+legacy_unit="$config_home/systemd/user/$LEGACY_NAME.service"
+legacy_desktop="$data_home/applications/$LEGACY_NAME.desktop"
+legacy_cli="$HOME/.local/bin/$LEGACY_NAME"
 
 usage() {
   cat <<USAGE
-Usage: omacast <command> [args]
+Usage: plasmacast <command> [args]
 
 Launcher
   toggle                 Show or hide the launcher
   show | hide            Show or hide it
-  run <commandId>        Open a command directly, e.g. omacast run omarchy:system.lock
-  call <method> [json]   Call a backend method, e.g. omacast call system.info
+  run <commandId>        Open a command directly, e.g. plasmacast run omarchy:system.lock
+  call <method> [json]   Call a backend method, e.g. plasmacast call system.info
 
 Setup
-  install                Start omacast with your session (systemd user service)
+  install                Start plasmacast with your session (systemd user service)
                          and link this CLI into ~/.local/bin
   setup kde [--key K] [--yes]
                          Bind a global shortcut (default Alt+Space). Takes
@@ -48,7 +54,7 @@ Development
 USAGE
 }
 
-die() { echo "omacast: $*" >&2; exit 1; }
+die() { echo "plasmacast: $*" >&2; exit 1; }
 interactive() { [[ -t 0 && -t 1 ]]; }
 
 qs_bin() { command -v qs || command -v quickshell; }
@@ -81,6 +87,22 @@ link_cli() {
 # systemd unit values: % is a specifier and paths are quoted.
 unit_quote() { local v=${1//%/%%}; printf '"%s"' "${v//\"/\\\"}"; }
 
+# Stop and remove the omacast service and CLI link left by the old name.
+# Its data directories move on the first start (core/Paths.js).
+remove_legacy_install() {
+  if [[ -f $legacy_unit ]]; then
+    systemctl --user disable --now "$LEGACY_NAME.service" >/dev/null 2>&1
+    rm "$legacy_unit" && echo "removed old $legacy_unit"
+    systemctl --user daemon-reload
+  fi
+  if [[ -L $legacy_cli ]]; then
+    local target
+    target=$(readlink -f "$legacy_cli" 2>/dev/null || true)
+    if [[ ! -e $legacy_cli || $target == "$repo"/* ]]; then rm "$legacy_cli" && echo "removed old $legacy_cli"; fi
+  fi
+  return 0
+}
+
 cmd_install() {
   need_qs
   [[ -f $entry ]] || die "shell.qml missing at $repo"
@@ -89,13 +111,14 @@ cmd_install() {
   else
     echo "Rust not found; skipping the helper build (the built-in matcher works without it)"
   fi
+  remove_legacy_install
   link_cli
 
   mkdir -p "$(dirname "$unit_file")"
   cat >"$unit_file" <<UNIT
-# Written by \`omacast install\`; rerunning install overwrites it.
+# Written by \`plasmacast install\`; rerunning install overwrites it.
 [Unit]
-Description=omacast launcher (Quickshell)
+Description=plasmacast launcher (Quickshell)
 PartOf=graphical-session.target
 After=graphical-session.target
 
@@ -116,13 +139,13 @@ UNIT
   local i
   for i in $(seq 1 100); do
     if running; then
-      echo "omacast is running"
-      [[ -f $desktop_file ]] || echo "bind a shortcut with: omacast setup kde"
+      echo "plasmacast is running"
+      [[ -f $desktop_file ]] || echo "bind a shortcut with: plasmacast setup kde"
       return 0
     fi
     sleep 0.1
   done
-  die "omacast did not answer; see: journalctl --user -u $SERVICE -e"
+  die "plasmacast did not answer; see: journalctl --user -u $SERVICE -e"
 }
 
 # ------------------------------------------------------------ shortcuts
@@ -133,7 +156,7 @@ UNIT
 
 KGA=(--session --dest org.kde.kglobalaccel --object-path /kglobalaccel)
 KRUNNER_ID="['org.kde.krunner.desktop', '_launch', 'KRunner', '']"
-OMACAST_ID="['$DESKTOP_ID', '_launch', 'omacast', '']"
+PLASMACAST_ID="['$DESKTOP_ID', '_launch', 'plasmacast', '']"
 
 kga() { gdbus call "${KGA[@]}" --method "org.kde.KGlobalAccel.$1" "${@:2}"; }
 
@@ -185,7 +208,7 @@ cmd_setup_kde() {
     case $1 in
       --yes|-y) assume_yes=1 ;;
       --key) key=${2:-}; shift ;;
-      *) die "usage: omacast setup kde [--key Alt+Space] [--yes]" ;;
+      *) die "usage: plasmacast setup kde [--key Alt+Space] [--yes]" ;;
     esac
     shift
   done
@@ -196,15 +219,32 @@ cmd_setup_kde() {
 
   local owner plan=() i
   owner=$(key_owner "$code")
-  if [[ -n $owner && $owner != "$DESKTOP_ID" && $owner != org.kde.krunner.desktop ]]; then
+  if [[ $owner == "$LEGACY_NAME.desktop" || -f $legacy_desktop ]]; then
+    plan+=("remove the old $LEGACY_NAME shortcut ($legacy_desktop)")
+  fi
+  if [[ -n $owner && $owner != "$DESKTOP_ID" && $owner != "$LEGACY_NAME.desktop" && $owner != org.kde.krunner.desktop ]]; then
     die "$key is already used by $owner; free it in System Settings › Keyboard › Shortcuts, or pick another with --key"
   fi
   [[ $owner == org.kde.krunner.desktop ]] && plan+=("remove $key from KRunner (it keeps its other shortcuts, e.g. Alt+F2)")
   plan+=("write $desktop_file, bound to $key")
 
-  echo "omacast setup kde will:"
+  echo "plasmacast setup kde will:"
   printf '  - %s\n' "${plan[@]}"
   confirm "Make these changes?" "$assume_yes" || die "nothing changed"
+
+  if [[ -f $legacy_desktop ]]; then
+    rm "$legacy_desktop" && echo "removed old $legacy_desktop"
+    if command -v kbuildsycoca6 >/dev/null; then
+      kbuildsycoca6 >/dev/null 2>&1
+      for i in $(seq 1 30); do [[ -z $(key_owner "$code") ]] && break; sleep 0.1; done
+    fi
+  fi
+  # KRunner's saved keys move with ~/.config on first start; cover a setup
+  # run before that.
+  local old_backup="$config_home/$LEGACY_NAME/krunner-shortcut"
+  if [[ -f $old_backup && ! -f $krunner_backup ]]; then
+    mkdir -p "$(dirname "$krunner_backup")" && mv "$old_backup" "$krunner_backup"
+  fi
 
   if [[ $owner == org.kde.krunner.desktop ]]; then
     local current rest=() c
@@ -223,7 +263,7 @@ cmd_setup_kde() {
     rm "$desktop_file"
     kbuildsycoca6 >/dev/null 2>&1
     for i in $(seq 1 30); do
-      kga shortcutKeys "$OMACAST_ID" 2>/dev/null | key_codes | grep -q . || break
+      kga shortcutKeys "$PLASMACAST_ID" 2>/dev/null | key_codes | grep -q . || break
       sleep 0.1
     done
   fi
@@ -231,11 +271,11 @@ cmd_setup_kde() {
   mkdir -p "$(dirname "$desktop_file")"
   cat >"$desktop_file" <<DESKTOP
 [Desktop Entry]
-# Written by \`omacast setup kde\`. The shortcut lives in System Settings ›
-# Keyboard › Shortcuts › omacast; X-KDE-Shortcuts is only its default.
+# Written by \`plasmacast setup kde\`. The shortcut lives in System Settings ›
+# Keyboard › Shortcuts › plasmacast; X-KDE-Shortcuts is only its default.
 Type=Application
-Name=omacast
-Comment=Toggle the omacast launcher
+Name=plasmacast
+Comment=Toggle the plasmacast launcher
 Icon=system-search
 Exec="$(qs_bin)" ipc -p "$entry" call $IPC_TARGET toggle
 NoDisplay=true
@@ -246,16 +286,16 @@ DESKTOP
   # kglobalaccel picks up new X-KDE-Shortcuts entries when ksycoca changes.
   command -v kbuildsycoca6 >/dev/null && kbuildsycoca6 >/dev/null 2>&1
   for i in $(seq 1 50); do
-    if kga shortcutKeys "$OMACAST_ID" 2>/dev/null | key_codes | grep -qx "$code"; then
-      echo "$key toggles omacast"
+    if kga shortcutKeys "$PLASMACAST_ID" 2>/dev/null | key_codes | grep -qx "$code"; then
+      echo "$key toggles plasmacast"
       return 0
     fi
     # Registered already but with an older default: set it explicitly.
-    kga shortcutKeys "$OMACAST_ID" >/dev/null 2>&1 && kga setForeignShortcutKeys "$OMACAST_ID" "$(keys_variant "$code")" >/dev/null 2>&1
+    kga shortcutKeys "$PLASMACAST_ID" >/dev/null 2>&1 && kga setForeignShortcutKeys "$PLASMACAST_ID" "$(keys_variant "$code")" >/dev/null 2>&1
     sleep 0.1
   done
   echo "the shortcut is written but KDE hasn't picked it up yet; it works after the next login,"
-  echo "or set it now in System Settings › Keyboard › Shortcuts › omacast"
+  echo "or set it now in System Settings › Keyboard › Shortcuts › plasmacast"
 }
 
 restore_krunner() {
@@ -274,11 +314,11 @@ restore_krunner() {
 cmd_uninstall() {
   local assume_yes=0
   [[ ${1:-} == --yes || ${1:-} == -y ]] && assume_yes=1
-  confirm "Stop omacast, remove its service, shortcut and CLI link?" "$assume_yes" || die "nothing changed"
+  confirm "Stop plasmacast, remove its service, shortcut and CLI link?" "$assume_yes" || die "nothing changed"
   if [[ -f $desktop_file ]]; then
     rm "$desktop_file" && echo "removed $desktop_file"
     command -v kbuildsycoca6 >/dev/null && kbuildsycoca6 >/dev/null 2>&1
-    sleep 0.5   # let kglobalaccel drop omacast's key before KRunner takes it
+    sleep 0.5   # let kglobalaccel drop plasmacast's key before KRunner takes it
   fi
   restore_krunner
   if [[ -f $unit_file ]]; then
@@ -289,7 +329,7 @@ cmd_uninstall() {
   if [[ -L $cli_link && $(readlink -f "$cli_link") == "$self" ]]; then
     rm "$cli_link" && echo "removed $cli_link"
   fi
-  echo "your history and settings stay in ${XDG_DATA_HOME:-~/.local/share}/omacast and $config_home/omacast"
+  echo "your history and settings stay in ${XDG_DATA_HOME:-~/.local/share}/plasmacast and $config_home/plasmacast"
 }
 
 cmd_doctor() {
@@ -299,12 +339,12 @@ cmd_doctor() {
     if "$@" >/dev/null 2>&1; then printf '  ok    %s\n' "$label"; else printf '  FAIL  %s\n' "$label"; bad=1; fi
   }
   info() { printf '  info  %s\n' "$1"; }
-  echo "omacast doctor"
+  echo "plasmacast doctor"
   check "Quickshell is installed" qs_bin
   check "Wayland session" test -n "${WAYLAND_DISPLAY:-}"
   if [[ ${XDG_CURRENT_DESKTOP:-} == *KDE* ]]; then printf '  ok    Plasma session\n'; else info "not a Plasma session (XDG_CURRENT_DESKTOP=${XDG_CURRENT_DESKTOP:-unset}); KDE actions won't work"; fi
   check "service $SERVICE is running" systemctl --user is-active "$SERVICE"
-  check "omacast answers IPC" running
+  check "plasmacast answers IPC" running
   check "backend answers system.healthPing" bash -c "$(printf '%q ' "$self") call system.healthPing '{}' | grep -q '\"ok\":true'"
   check "wl-copy is installed (copy answers)" command -v wl-copy
   check "kstart is installed (launch apps)" command -v kstart
@@ -313,26 +353,26 @@ cmd_doctor() {
   else info "no kdotool: opening an app always starts a new instance (AUR: kdotool)"; fi
   if command -v ydotool >/dev/null || command -v dotool >/dev/null; then printf '  ok    ydotool/dotool installed (paste answers)\n'
   else info "no ydotool/dotool: \"Paste Answer\" only copies"; fi
-  if [[ -x $repo/bin/omacast-search ]]; then printf '  ok    flea-search helper is built\n'
-  else info "no flea-search helper; using the built-in matcher (build it with: omacast build-search)"; fi
+  if [[ -x $repo/bin/plasmacast-search ]]; then printf '  ok    flea-search helper is built\n'
+  else info "no flea-search helper; using the built-in matcher (build it with: plasmacast build-search)"; fi
   if [[ -f $desktop_file ]]; then
     local key
     key=$(sed -n 's/^X-KDE-Shortcuts=//p' "$desktop_file")
-    if command -v gdbus >/dev/null && code=$(key_code "$key") && kga shortcutKeys "$OMACAST_ID" 2>/dev/null | key_codes | grep -qx "$code"; then
+    if command -v gdbus >/dev/null && code=$(key_code "$key") && kga shortcutKeys "$PLASMACAST_ID" 2>/dev/null | key_codes | grep -qx "$code"; then
       printf '  ok    shortcut %s is active\n' "$key"
     else
-      info "shortcut file exists but $key isn't confirmed active; check System Settings › Keyboard › Shortcuts › omacast"
+      info "shortcut file exists but $key isn't confirmed active; check System Settings › Keyboard › Shortcuts › plasmacast"
     fi
   else
-    info "no shortcut yet; run: omacast setup kde"
+    info "no shortcut yet; run: plasmacast setup kde"
   fi
   return $bad
 }
 
 case "${1:-}" in
   toggle|show|hide) need_qs; ipc "$1" >/dev/null ;;
-  run) need_qs; [[ -n ${2:-} ]] || die "usage: omacast run <commandId>"; ipc run "$2" ;;
-  call) need_qs; [[ -n ${2:-} ]] || die "usage: omacast call <method> [json]"; ipc call "$2" "${3:-}" ;;
+  run) need_qs; [[ -n ${2:-} ]] || die "usage: plasmacast run <commandId>"; ipc run "$2" ;;
+  call) need_qs; [[ -n ${2:-} ]] || die "usage: plasmacast call <method> [json]"; ipc call "$2" "${3:-}" ;;
   ping) need_qs; ipc ping ;;
   build-search) "$repo/bin/build-search" ;;
   install) cmd_install ;;
@@ -340,7 +380,7 @@ case "${1:-}" in
   setup)
     case "${2:-}" in
       kde) shift 2; cmd_setup_kde "$@" ;;
-      *) die "usage: omacast setup kde [--key Alt+Space] [--yes]" ;;
+      *) die "usage: plasmacast setup kde [--key Alt+Space] [--yes]" ;;
     esac
     ;;
   restart) systemctl --user restart "$SERVICE" ;;

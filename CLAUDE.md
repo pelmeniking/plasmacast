@@ -1,6 +1,8 @@
 # CLAUDE.md
 
-> **KDE fork.** This checkout runs on KDE Plasma 6 as a standalone Quickshell
+> **plasmacast: KDE fork of omacast.** Same code, renamed (CLI `plasmacast`,
+> IPC target and data dirs `plasmacast`; menu ids keep the `omarchy:` prefix
+> so frecency and favorites stay compatible). This checkout runs on KDE Plasma 6 as a standalone Quickshell
 > config (`shell.qml`), not inside `omarchy-shell`. `Commons/` (and
 > `ui/BorderSurface.qml`, `ui/PointerMoveGate.qml`) are KDE stand-ins for
 > omarchy-shell's `qs.Commons`/`qs.Ui`; KDE actions live in

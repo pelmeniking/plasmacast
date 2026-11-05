@@ -25,7 +25,7 @@ Item {
     if (service.pending) service.launchRequested(service.pending)
     service.pending = candidate
     focuser.running = false
-    focuser.command = ["bash", "-c", service.script, "omacast-focus"].concat(candidate.windowKeys)
+    focuser.command = ["bash", "-c", service.script, "plasmacast-focus"].concat(candidate.windowKeys)
     focuser.running = true
   }
 

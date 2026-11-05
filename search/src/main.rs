@@ -14,7 +14,7 @@ fn main() -> ExitCode {
     match protocol::run(stdin.lock(), &mut output) {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
-            eprintln!("omacast-search: {error}");
+            eprintln!("plasmacast-search: {error}");
             ExitCode::FAILURE
         }
     }

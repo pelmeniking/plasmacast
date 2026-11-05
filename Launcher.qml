@@ -10,7 +10,7 @@ Item {
   property var shell: null
   property var manifest: null
 
-  readonly property string pluginId: (root.manifest && root.manifest.id) || "typecraft.omacast"
+  readonly property string pluginId: (root.manifest && root.manifest.id) || "typecraft.plasmacast"
 
   property bool opened: false
   property double openedAt: 0
@@ -54,7 +54,7 @@ Item {
   }
 
   function run(commandId) {
-    // `omacast run` is explicit, so it skips the confirmation alert.
+    // `plasmacast run` is explicit, so it skips the confirmation alert.
     var r = backend.callSync("rootSearch.performAction", { id: commandId, action: "open", query: "", confirmed: true })
     if (!r.ok) return r
     var outcome = r.data || {}
@@ -84,11 +84,11 @@ Item {
   }
 
   // KDE: the global shortcut is a KDE service shortcut that runs
-  // `omacast toggle` (see `omacast setup kde`), which lands in the
+  // `plasmacast toggle` (see `plasmacast setup kde`), which lands in the
   // IpcHandler below. Hyprland's GlobalShortcut protocol does not exist on KWin.
 
   IpcHandler {
-    target: "omacast"
+    target: "plasmacast"
 
     function toggle(): string {
       root.toggle()

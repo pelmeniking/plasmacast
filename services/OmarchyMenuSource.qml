@@ -6,7 +6,7 @@ import "../core/OmarchyMenu.js" as OmarchyMenu
 Item {
   id: source
 
-  // KDE: the default menu ships with omacast (kde/menu.jsonc, same format as
+  // KDE: the default menu ships with plasmacast (kde/menu.jsonc, same format as
   // Omarchy's omarchy-menu.jsonc). Entries in the user file override or add
   // to it by id, exactly like Omarchy's extensions file.
   // Quickshell serves files under its config root as qs:@/… URLs, so a
@@ -15,7 +15,7 @@ Item {
     var url = Qt.resolvedUrl("../kde/menu.jsonc").toString()
     return /^file:\/\//.test(url) ? decodeURIComponent(url.slice(7)) : Quickshell.shellPath("kde/menu.jsonc")
   }
-  readonly property string userPath: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/omacast/menu.jsonc"
+  readonly property string userPath: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/plasmacast/menu.jsonc"
 
   property var defaultItems: []
   property var userItems: []

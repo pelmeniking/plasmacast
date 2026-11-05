@@ -16,15 +16,15 @@ function qmlBlock(signature) {
   return source.slice(start, end + 4)
 }
 
-test("loading feedback delays fast work, preserves toasts and resets across hide and reopen", { skip: !process.env.OMACAST_QML_RUNNER }, t => {
+test("loading feedback delays fast work, preserves toasts and resets across hide and reopen", { skip: !process.env.PLASMACAST_QML_RUNNER }, t => {
   const parent = fs.realpathSync(os.tmpdir())
-  const root = fs.mkdtempSync(path.join(parent, "omacast-loading-probe-"))
-  const marker = path.join(root, ".omacast-loading-probe")
+  const root = fs.mkdtempSync(path.join(parent, "plasmacast-loading-probe-"))
+  const marker = path.join(root, ".plasmacast-loading-probe")
   fs.writeFileSync(marker, "loading feedback fixture\n")
   t.after(() => {
     assert.ok(path.isAbsolute(root))
     assert.equal(path.dirname(root), parent)
-    assert.ok(path.basename(root).startsWith("omacast-loading-probe-"))
+    assert.ok(path.basename(root).startsWith("plasmacast-loading-probe-"))
     assert.equal(fs.readFileSync(marker, "utf8"), "loading feedback fixture\n")
     fs.rmSync(root, { recursive: true, force: true })
   })
@@ -50,7 +50,7 @@ ShellRoot {
   property QtObject backend: QtObject { property bool loading: false }
   property bool shown: false
   property var toast: null
-  property var view: ({ title: "omacast" })
+  property var view: ({ title: "plasmacast" })
   ${declarations}
   ${qmlBlock("onBusyChanged: {")}
   ${qmlBlock("Timer {\n    id: loadingDelay")}
@@ -58,17 +58,17 @@ ShellRoot {
   property int stage: 0
   function check(ok, detail) { if (!ok) throw new Error(detail) }
   property var stages: [
-    { wait: 50, run: function() { check(!window.loadingVisible && window.footerText === "omacast", "fast work flashed"); backend.loading = false } },
+    { wait: 50, run: function() { check(!window.loadingVisible && window.footerText === "plasmacast", "fast work flashed"); backend.loading = false } },
     { wait: loadingFeedbackDelay + 80, run: function() { check(!window.loadingVisible, "completed work left a pending cue"); backend.loading = true } },
     { wait: loadingFeedbackDelay + 80, run: function() { check(window.loadingVisible && window.footerText === "Loading…", "slow work lacks feedback"); window.toast = { title: "<b>Copied</b>" } } },
     { wait: 30, run: function() { check(window.footerText === "<b>Copied</b>", "toast lost priority"); window.toast = null; backend.loading = false } },
-    { wait: 30, run: function() { check(!window.loadingVisible && window.footerText === "omacast", "completion did not restore context"); backend.loading = true } },
+    { wait: 30, run: function() { check(!window.loadingVisible && window.footerText === "plasmacast", "completion did not restore context"); backend.loading = true } },
     { wait: 100, run: function() { window.shown = false } },
     { wait: loadingFeedbackDelay + 80, run: function() { check(!window.loadingVisible, "hidden window retained feedback"); window.shown = true } },
     { wait: 100, run: function() { check(!window.loadingVisible, "reopen reused an old delay") } },
     { wait: loadingFeedbackDelay + 80, run: function() { check(window.loadingVisible, "reopen lost persistent loading"); window.shown = false } },
     { wait: 30, run: function() { check(!window.loadingVisible, "close retained visible feedback"); backend.loading = false; window.shown = true } },
-    { wait: loadingFeedbackDelay + 80, run: function() { check(!window.loadingVisible && window.footerText === "omacast", "idle reopen flashed"); console.log("OMACAST_LOADING_PROBE:OK"); Qt.quit() } }
+    { wait: loadingFeedbackDelay + 80, run: function() { check(!window.loadingVisible && window.footerText === "plasmacast", "idle reopen flashed"); console.log("PLASMACAST_LOADING_PROBE:OK"); Qt.quit() } }
   ]
   Timer {
     id: tick
@@ -80,7 +80,7 @@ ShellRoot {
           tick.interval = window.stages[window.stage].wait
           tick.restart()
         }
-      } catch (error) { console.error("OMACAST_LOADING_PROBE:FAIL " + error); Qt.quit() }
+      } catch (error) { console.error("PLASMACAST_LOADING_PROBE:FAIL " + error); Qt.quit() }
     }
   }
   Component.onCompleted: Qt.callLater(function() {
@@ -91,10 +91,10 @@ ShellRoot {
   })
 }
 `)
-  const result = spawnSync(process.env.OMACAST_QML_RUNNER, ["-p", config], { cwd: root, env, encoding: "utf8", timeout: 10000, killSignal: "SIGKILL" })
+  const result = spawnSync(process.env.PLASMACAST_QML_RUNNER, ["-p", config], { cwd: root, env, encoding: "utf8", timeout: 10000, killSignal: "SIGKILL" })
   assert.ifError(result.error)
   const output = result.stdout + result.stderr
   assert.equal(result.status, 0, output)
-  assert.match(output, /OMACAST_LOADING_PROBE:OK/)
-  assert.doesNotMatch(output, /OMACAST_LOADING_PROBE:FAIL/)
+  assert.match(output, /PLASMACAST_LOADING_PROBE:OK/)
+  assert.doesNotMatch(output, /PLASMACAST_LOADING_PROBE:FAIL/)
 })

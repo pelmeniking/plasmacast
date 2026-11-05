@@ -1,7 +1,10 @@
 
-var APP = "omacast"
-// The name before 2026-11-01. Its directories move to APP on first start. [D]
-var LEGACY_APP = "oma-cast"
+var APP = "plasmacast"
+// Earlier names, newest first: omacast (the KDE port before it became
+// plasmacast) and oma-cast (upstream before 2026-11-01). On first start the
+// newest one that exists moves to APP; the setup script never overwrites. [D]
+var LEGACY_APPS = ["omacast", "oma-cast"]
+var LEGACY_APP = LEGACY_APPS[LEGACY_APPS.length - 1]
 
 function xdg(env, name, homeFallback) {
   var value = String(env(name) || "")
@@ -39,12 +42,14 @@ function resolve(env) {
   }
 }
 
-// [from, to] pairs for the base directories still under LEGACY_APP.
+// [from, to] pairs for the base directories still under an older name.
 function legacyMoves(paths) {
   var suffix = "/" + APP
-  return [paths.config, paths.data, paths.cache, paths.state].map(function(dir) {
-    return [dir.slice(0, -suffix.length) + "/" + LEGACY_APP, dir]
+  var moves = []
+  ;[paths.config, paths.data, paths.cache, paths.state].forEach(function(dir) {
+    LEGACY_APPS.forEach(function(name) { moves.push([dir.slice(0, -suffix.length) + "/" + name, dir]) })
   })
+  return moves
 }
 
 function directoriesToCreate(paths) {
@@ -82,14 +87,14 @@ var SETUP_SCRIPT = [
 ].join("\n")
 
 function setupArgv(paths, files) {
-  return ["bash", "-c", SETUP_SCRIPT, "omacast-setup"]
+  return ["bash", "-c", SETUP_SCRIPT, "plasmacast-setup"]
     .concat([].concat.apply([], legacyMoves(paths)), ["--"], directoriesToCreate(paths), ["--"],
       privateRoots(paths), ["--"], privateTrees(paths), ["--"], files)
 }
 
 if (typeof module !== "undefined") {
   module.exports = {
-    APP: APP, LEGACY_APP: LEGACY_APP, resolve: resolve, legacyMoves: legacyMoves, directoriesToCreate: directoriesToCreate,
+    APP: APP, LEGACY_APP: LEGACY_APP, LEGACY_APPS: LEGACY_APPS, resolve: resolve, legacyMoves: legacyMoves, directoriesToCreate: directoriesToCreate,
     privateRoots: privateRoots, privateTrees: privateTrees, SETUP_SCRIPT: SETUP_SCRIPT, setupArgv: setupArgv
   }
 }

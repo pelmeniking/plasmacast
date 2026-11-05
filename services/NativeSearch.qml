@@ -9,8 +9,8 @@ Item {
   property var ids: []
   // Standalone (KDE) runs serve QML as qs:@/… URLs; see OmarchyMenuSource.
   property string executable: {
-    var url = Qt.resolvedUrl("../bin/omacast-search").toString()
-    return /^file:\/\//.test(url) ? decodeURIComponent(url.slice(7)) : Quickshell.shellPath("bin/omacast-search")
+    var url = Qt.resolvedUrl("../bin/plasmacast-search").toString()
+    return /^file:\/\//.test(url) ? decodeURIComponent(url.slice(7)) : Quickshell.shellPath("bin/plasmacast-search")
   }
   property bool disabled: false
   property bool loaded: false
@@ -93,7 +93,7 @@ Item {
   Process {
     id: helper
     // Bash emits a normal process exit when the helper is missing or cannot execute.
-    command: ["bash", "-c", 'exec -- "$1"', "omacast-search", service.executable]
+    command: ["bash", "-c", 'exec -- "$1"', "plasmacast-search", service.executable]
     stdinEnabled: true
     stdout: SplitParser { onRead: function(line) { service.receive(line) } }
     onStarted: service.load()

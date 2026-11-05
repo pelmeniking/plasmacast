@@ -2,7 +2,7 @@ pragma Singleton
 import QtQuick
 
 // KDE stand-in for omarchy-shell's Border singleton: a flat, uniform border
-// is all omacast draws, so a spec is just { color, widths }.
+// is all plasmacast draws, so a spec is just { color, widths }.
 QtObject {
   function make(color, width) {
     var w = Math.max(0, Number(width) || 0)

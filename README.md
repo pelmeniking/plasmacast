@@ -1,122 +1,146 @@
-# omacast für KDE Plasma
+# plasmacast
 
-Ein Raycast-artiger Launcher für **KDE Plasma 6 (Wayland)**. Das ist ein Fork von
-[typecraft-dev/oma-cast](https://github.com/typecraft-dev/oma-cast), der ursprünglich nur als
-Plugin in `omarchy-shell` unter Hyprland lief. Suche, Ranking (Port des Raycast-Algorithmus),
-Frecency, Aliase, Favoriten, Rechner und Ctrl+K-Aktionspanel sind unverändert; geändert ist
-alles, was an Omarchy und Hyprland hing. Die ursprüngliche Anleitung steht in
-[`README.omarchy.md`](README.omarchy.md).
+**A Raycast-style launcher for KDE Plasma 6 (Wayland).** It learns what you use, searches your apps,
+every System Settings page and a set of Plasma actions, and follows your color scheme.
 
-## Was anders ist als unter Omarchy
+plasmacast is a fork of [omacast](https://github.com/typecraft-dev/oma-cast) by typecraft, which is
+built for [Omarchy](https://omarchy.org) and runs inside `omarchy-shell` on Hyprland. The search, the
+ranking (a port of Raycast's root-search algorithm with frecency and learned search terms), aliases,
+favorites, the calculator and the Ctrl+K action panel are omacast's. plasmacast replaces everything that
+depended on Omarchy and Hyprland. The port was written with Claude (Anthropic) and is tested on
+CachyOS with Plasma 6.
 
-| | Omarchy | KDE-Fork |
-|---|---|---|
-| Läuft in | `omarchy-shell` als Plugin | eigener Quickshell-Instanz (`qs -p …/shell.qml`), gestartet von einem systemd-User-Service |
-| Farben und Schrift | Omarchy-Theme | aktives Plasma-Farbschema und Systemschrift, live beim Umschalten |
-| Aktionen | ~400 Einträge aus `omarchy-menu.jsonc` | KDE-Aktionen aus [`kde/menu.jsonc`](kde/menu.jsonc), dazu **alle Systemeinstellungs-Seiten** |
-| Apps starten | `uwsm-app` / `gtk-launch` | `kstart --application` (wie Kickoff, mit eigenem systemd-Scope) |
-| Offenes Fenster fokussieren | `hyprctl` | `kdotool` (optional) |
-| Tastenkürzel | Hyprland `global` | KDE-Dienst-Kurzbefehl über kglobalaccel, Standard **Alt+Space** |
-| HUD | Omarchy-OSD | Plasma-OSD |
+> **Status: personal project, provided as is.** It works on my machine. Issues are welcome, but I
+> can't promise fixes or a schedule. plasmacast is not an official KDE project.
 
-### Die KDE-Aktionen
+## What it does on Plasma
 
-- **System:** Bildschirm sperren, Standby, Ruhezustand (nur wenn verfügbar), Abmelden, Neu starten,
-  Herunterfahren (die letzten drei mit Rückfrage, über Plasmas eigenen Sitzungsdienst), Energieprofil,
-  Plasma-Shell neu starten
-- **Erscheinungsbild:** Dunkel/Hell umschalten, Farbschema und globales Design als Untermenü mit ✓ am
-  aktuellen Eintrag, Nachtfarben umschalten
-- **Fenster:** Übersicht, Rasteransicht, Fenster zeigen, Arbeitsfläche anzeigen, Fenster beenden
-- **Bildschirmfoto** (Spectacle): Bereich, Bildschirm, alle Bildschirme, Fenster, Bereich aufnehmen
-- **Systemeinstellungen:** jede Seite einzeln suchbar („Anzeige“, „Bluetooth“, „Kurzbefehle“ …), über
-  die `kcm_*.desktop`-Einträge, die auch KRunner nutzt
+- **Apps** start through `kstart`, like Kickoff. With [`kdotool`](https://github.com/jinliu/kdotool)
+  installed, ↵ switches to an app's open window instead of starting another one (Shift+↵ always opens new).
+- **System Settings pages** are searchable one by one (“Display”, “Bluetooth”, “Shortcuts”…), from the
+  same `kcm_*.desktop` entries KRunner uses.
+- **Plasma actions** ([`kde/menu.jsonc`](kde/menu.jsonc)):
+  - System: lock, sleep, hibernate (when available), log out, restart, shut down (the last three ask
+    first), power profile, restart Plasma
+  - Appearance: dark/light mode, color scheme and global theme submenus with ✓ on the current one,
+    night light
+  - Windows: Overview, Grid View, Present Windows, Show Desktop, Kill Window
+  - Screenshot (Spectacle): region, screen, all screens, window, record region
+- **Looks native:** colors come from your Plasma color scheme and change live when you switch; text
+  uses your system font; feedback uses Plasma's OSD.
 
-Eigene Einträge legst du in `~/.config/omacast/menu.jsonc` an (im Launcher: „Edit omacast Menu“). Das
-Format ist dasselbe wie in `kde/menu.jsonc`; gleiche IDs überschreiben, neue kommen dazu. Beispiel:
+Add your own entries in `~/.config/plasmacast/menu.jsonc` (“Edit plasmacast Menu” opens it). Same
+format as `kde/menu.jsonc`; the same id overrides, a new one adds:
 
 ```jsonc
 {
   "dev": {"iconName":"utilities-terminal","label":"Dev"},
-  "dev.restart-docker": {"iconName":"view-refresh","label":"Docker neu starten","action":"pkexec systemctl restart docker"}
+  "dev.restart-docker": {"iconName":"view-refresh","label":"Restart Docker","action":"pkexec systemctl restart docker"}
 }
 ```
 
-## Installation (CachyOS / Arch)
+## Install (Arch / CachyOS)
 
 ```sh
-sudo pacman -S quickshell ttf-nerd-fonts-symbols wl-clipboard
-paru -S kdotool            # optional: ↵ springt zu einem schon offenen Fenster
-git clone <dieser Fork> ~/src/omacast
-~/src/omacast/bin/omacast install     # systemd-User-Service + CLI nach ~/.local/bin
-omacast setup kde                      # Alt+Space binden (fragt vorher)
-omacast doctor
+sudo pacman -S --needed quickshell ttf-nerd-fonts-symbols wl-clipboard
+paru -S kdotool-bin                    # optional: focus open windows
+git clone https://github.com/<you>/plasmacast ~/repos/plasmacast
+~/repos/plasmacast/bin/plasmacast install     # systemd user service + CLI in ~/.local/bin
+plasmacast setup kde                          # bind Alt+Space (asks first)
+plasmacast doctor
 ```
 
-`omacast setup kde` zeigt an, was es ändert, und fragt nach. Alt+Space gehört in Plasma standardmäßig
-KRunner; setup nimmt KRunner nur diese eine Taste weg (Alt+F2 bleibt) und merkt sich die alte Belegung.
-Eine andere Taste: `omacast setup kde --key Meta+Space`. Danach steht omacast auch unter
-*Systemeinstellungen › Tastatur › Kurzbefehle* und lässt sich dort ändern.
+`plasmacast setup kde` lists what it changes and asks. Alt+Space belongs to KRunner by default; setup
+takes only that key (KRunner keeps Alt+F2) and remembers the old binding. Another key:
+`plasmacast setup kde --key Meta+Space`. Afterwards plasmacast appears in System Settings › Keyboard ›
+Shortcuts, where you can change it. No re-login needed.
 
 Optional:
 
-- `ydotool` (mit laufendem `ydotoold`) oder `dotool`: „Paste Answer“ im Rechner fügt direkt ein.
-  KWin erlaubt normalen Programmen keine virtuelle Tastatur, `wtype` geht unter Plasma also nicht.
-- Rust (`cargo`): `omacast install` baut dann den schnelleren Such-Helfer aus `search/`.
-- Umgebungsvariablen in `~/.config/systemd/user/omacast.service.d/override.conf`
-  (`systemctl --user edit omacast`): `OMACAST_FONT`, `OMACAST_FONT_SIZE`, `OMACAST_RADIUS`,
-  `OMACAST_OPACITY` (0.5–1).
+- `ydotool` (with `ydotoold` running) or `dotool`: the calculator's “Paste Answer” types the answer.
+  KWin gives normal apps no virtual keyboard, so `wtype` doesn't work on Plasma.
+- Rust (`cargo`): `plasmacast install` then builds the faster, typo-tolerant search helper in `search/`.
+- `systemctl --user edit plasmacast` to set `PLASMACAST_FONT`, `PLASMACAST_FONT_SIZE`,
+  `PLASMACAST_RADIUS` or `PLASMACAST_OPACITY` (0.5–1).
 
-### Entfernen
+### Coming from the omacast KDE port
+
+`plasmacast install` removes the old `omacast` service and CLI link, `plasmacast setup kde` replaces the
+old shortcut, and your history, favorites and aliases move from `omacast` to `plasmacast` on first start.
+
+### Remove
 
 ```sh
-omacast uninstall      # Service, Kurzbefehl und CLI-Link weg, KRunner bekommt Alt+Space zurück
+plasmacast uninstall   # service, shortcut and CLI link; KRunner gets Alt+Space back
 ```
 
-Deine Daten bleiben in `~/.config/omacast`, `~/.local/share/omacast`, `~/.cache/omacast` und
-`~/.local/state/omacast`.
+Your data stays in `~/.config/plasmacast`, `~/.local/share/plasmacast`, `~/.cache/plasmacast` and
+`~/.local/state/plasmacast`.
+
+## Updates
+
+plasmacast runs straight from its checkout: `git pull`, then `plasmacast restart`.
+
+## Privacy and network
+
+Search history, learned terms and calculator history stay on your machine in owner-only files. Copied
+text goes to `wl-copy` on stdin, never on a command line. The only network request is the calculator's
+currency rates (ECB, from `api.frankfurter.dev`, at most every 12 hours); turn it off with
+`"currencyRates": false` in `~/.config/plasmacast/config.json`. No telemetry.
+
+## Keyboard
+
+| Key | Does |
+|---|---|
+| `↵` / `Ctrl+↵` / `Ctrl+Shift+↵` | First, second or third action |
+| `Shift+↵` | Open a new window of an app |
+| `Ctrl+K` | Action panel |
+| `Ctrl+1`…`9` | Pick a result |
+| `↑` on an empty search | Search history |
+| `Ctrl+↑` / `Ctrl+↓` | Jump between sections |
+| `Ctrl+N` / `Ctrl+P` | Next / previous |
+| `Ctrl+Shift+F` | Add to favorites (`Ctrl+Alt+↑↓` to reorder) |
+| `Ctrl+Shift+C` | Copy |
+| `Esc` / `Shift+Esc` | Back / back to root |
+| `Ctrl +` / `Ctrl −` / `Ctrl 0` | Zoom |
 
 ## CLI
 
 ```sh
-omacast toggle | show | hide
-omacast run <commandId>         # z. B. omarchy:system.lock, app:org.kde.dolphin
-omacast call <method> [json]    # beliebige Backend-Methode
-omacast restart | log | doctor
+plasmacast toggle | show | hide
+plasmacast run <commandId>         # e.g. omarchy:system.lock, app:org.kde.dolphin
+plasmacast call <method> [json]    # any backend method
+plasmacast restart | log | doctor
 ```
 
-(Die IDs der Menüeinträge beginnen intern weiter mit `omarchy:`, damit Favoriten, Aliase und
-Frecency mit dem Original kompatibel bleiben.)
+Menu ids keep omacast's `omarchy:` prefix so favorites and history stay compatible with upstream.
 
-## Tastatur
+## How the port works
 
-Wie im Original: `↵` / `Ctrl+↵` / `Ctrl+Shift+↵` für die erste bis dritte Aktion, `Ctrl+K`
-Aktionspanel, `Ctrl+1…9` Treffer wählen, `↑` bei leerer Suche für den Verlauf, `Ctrl+↑/↓` zwischen
-Abschnitten, `Ctrl+Shift+F` Favorit, `Esc` zurück, `Ctrl +/−/0` Zoom. Vollständige Liste in
-[`README.omarchy.md`](README.omarchy.md#keyboard).
+- `shell.qml` makes the checkout a standalone Quickshell config. `import qs.Commons` resolves to
+  `Commons/`, small stand-ins for omarchy-shell's style, color and utility singletons (colors from Qt's
+  `SystemPalette`, fonts from the system font). `ui/BorderSurface.qml` and `ui/PointerMoveGate.qml`
+  replace the two pieces used from `qs.Ui`.
+- `services/AppFocuser.qml` uses `kdotool` instead of `hyprctl`; `services/OmarchyMenuSource.qml`
+  reads `kde/menu.jsonc` plus your file; the submenu providers in `core/OmarchyMenu.js` call
+  `plasma-apply-colorscheme`, `plasma-apply-lookandfeel` and `powerprofilesctl`.
+- Window actions invoke KWin's own global-shortcut actions over D-Bus (`invokeShortcut`).
+- `bin/plasmacast setup kde` writes a `.desktop` file with `X-KDE-Shortcuts` and frees the key from
+  KRunner live through kglobalaccel's `setForeignShortcutKeys` (via `gdbus`).
 
-## Wie der Umbau aufgebaut ist
+The original omacast README is kept as [`README.omarchy.md`](README.omarchy.md).
 
-- `shell.qml` ist der Einstiegspunkt für Quickshell. `import qs.Commons` zeigt dort auf `Commons/`:
-  kleine KDE-Ersatzteile für die Style-, Farb- und Hilfs-Singletons, die `omarchy-shell` sonst
-  mitbringt (Farben aus `SystemPalette`, Schrift aus `Qt.application.font`). `ui/BorderSurface.qml`
-  und `ui/PointerMoveGate.qml` ersetzen die zwei Bausteine aus `qs.Ui`.
-- `services/AppFocuser.qml` nutzt `kdotool` statt `hyprctl`; `services/OmarchyMenuSource.qml` liest
-  `kde/menu.jsonc` plus deine Datei; die Untermenü-Provider in `core/OmarchyMenu.js` rufen
-  `plasma-apply-colorscheme`, `plasma-apply-lookandfeel` und `powerprofilesctl` auf.
-- Fenster-Aktionen laufen über `org.kde.kglobalaccel … invokeShortcut`, also über dieselben Aktionen,
-  die KWin für seine eigenen Tastenkürzel registriert.
-- `bin/omacast` richtet Service und Kurzbefehl ein. Der Kurzbefehl ist eine `.desktop`-Datei mit
-  `X-KDE-Shortcuts`; die KRunner-Umbelegung läuft live über `gdbus` und kglobalaccels
-  `setForeignShortcutKeys`, eine Neuanmeldung ist nicht nötig.
-
-## Entwicklung
+## Development
 
 ```sh
-node --test tests/*.test.js   # Unit-Tests, kein npm install nötig
-tests/smoke.sh                # Live-Checks gegen die laufende Instanz
-omacast restart               # Quickshell cached QML; nach Änderungen neu starten
-omacast log
+node --test tests/*.test.js   # unit tests, no npm install
+tests/smoke.sh                # live checks against the running instance
+plasmacast restart            # Quickshell caches QML; restart after edits
+plasmacast log
 ```
 
-Lizenz MIT wie das Original. `ui/PointerMoveGate.qml` und Teile von `Commons/Util.qml` stammen aus
-Omarchys Shell (MIT). omacast ist ein unabhängiges Clean-Room-Projekt ohne Verbindung zu Raycast.
+## License
+
+MIT, like omacast. `ui/PointerMoveGate.qml` and parts of `Commons/Util.qml` come from Omarchy's shell
+(MIT). plasmacast, like omacast, is a clean-room project: it isn't affiliated with Raycast and contains
+no Raycast code. It isn't affiliated with KDE e.V. either.

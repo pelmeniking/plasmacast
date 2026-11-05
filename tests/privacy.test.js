@@ -12,7 +12,7 @@ const root = path.join(__dirname, "..")
 const mode = (p) => fs.statSync(p).mode & 0o777
 
 function tempHome(t) {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), "omacast-privacy-"))
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "plasmacast-privacy-"))
   fs.chmodSync(home, 0o755)
   t.after(() => fs.rmSync(home, { recursive: true, force: true }))
   return home
@@ -48,9 +48,9 @@ test("an atomic save into a pre-created file keeps it private", (t) => {
 
 test("readable histories from older builds are repaired; stricter modes are kept", (t) => {
   const home = tempHome(t)
-  const db = home + "/.local/share/omacast/db"
+  const db = home + "/.local/share/plasmacast/db"
   fs.mkdirSync(db, { recursive: true, mode: 0o755 })
-  fs.chmodSync(home + "/.local/share/omacast", 0o755)
+  fs.chmodSync(home + "/.local/share/plasmacast", 0o755)
   fs.writeFileSync(db + "/frecency.json", "{}", { mode: 0o644 })
   fs.writeFileSync(db + "/calculator.json", "{}", { mode: 0o644 })
   fs.writeFileSync(db + "/settings.json", "{}")
@@ -77,6 +77,19 @@ test("legacy oma-cast data moves and comes out private", (t) => {
   assert.ok(!fs.existsSync(home + "/.local/share/oma-cast"))
   assert.equal(mode(p.data), 0o700)
   assert.equal(mode(p.db + "/calculator.json"), 0o600)
+})
+
+test("omacast data (the KDE port's old name) moves to plasmacast and wins over oma-cast", (t) => {
+  const home = tempHome(t)
+  for (const [name, body] of [["omacast", '{"items":{"app:new":{}}}'], ["oma-cast", '{"items":{"app:old":{}}}']]) {
+    fs.mkdirSync(home + "/.local/share/" + name + "/db", { recursive: true })
+    fs.writeFileSync(home + "/.local/share/" + name + "/db/frecency.json", body, { mode: 0o644 })
+  }
+  const p = runSetup(home)
+  assert.equal(fs.readFileSync(p.db + "/frecency.json", "utf8"), '{"items":{"app:new":{}}}')
+  assert.ok(!fs.existsSync(home + "/.local/share/omacast"))
+  assert.ok(fs.existsSync(home + "/.local/share/oma-cast"), "an older name is left alone once the newest moved")
+  assert.equal(mode(p.db + "/frecency.json"), 0o600)
 })
 
 // The clipboard scripts run with the text on stdin. A fake wl-copy/wtype on

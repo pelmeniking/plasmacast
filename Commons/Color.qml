@@ -4,17 +4,17 @@ import Quickshell
 
 // KDE stand-in for omarchy-shell's Color singleton. The colors come from the
 // active Plasma color scheme through Qt's palette (plasma-integration sets it
-// for every Qt app), so omacast follows Breeze Light/Dark and custom schemes,
+// for every Qt app), so plasmacast follows Breeze Light/Dark and custom schemes,
 // and updates live when you switch.
 //
-// OMACAST_OPACITY (0.5–1, default 1) makes the card translucent.
+// PLASMACAST_OPACITY (0.5–1, default 1) makes the card translucent.
 QtObject {
   id: root
 
   property SystemPalette palette: SystemPalette { colorGroup: SystemPalette.Active }
 
   readonly property real opacity: {
-    var n = Number(Quickshell.env("OMACAST_OPACITY"))
+    var n = Number(Quickshell.env("PLASMACAST_OPACITY"))
     return isFinite(n) && n >= 0.5 && n <= 1 ? n : 1
   }
 

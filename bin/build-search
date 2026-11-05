@@ -2,15 +2,15 @@
 set -euo pipefail
 
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
-command -v cargo >/dev/null || { echo "omacast: building search needs Rust (cargo)" >&2; exit 1; }
+command -v cargo >/dev/null || { echo "plasmacast: building search needs Rust (cargo)" >&2; exit 1; }
 # The build goes outside the plugin folder: omarchy-shell watches that folder
 # and would reload the plugin for every file cargo writes.
-target_dir=${CARGO_TARGET_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/omacast/search-target}
+target_dir=${CARGO_TARGET_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/plasmacast/search-target}
 [[ $target_dir == /* ]] || target_dir="$PWD/$target_dir"
 cargo build --locked --release --manifest-path "$repo/search/Cargo.toml" --target-dir "$target_dir"
 temporary=$(mktemp "$repo/bin/.search.XXXXXXXX")
 trap 'rm -f -- "$temporary"' EXIT
-cp "$target_dir/release/omacast-search" "$temporary"
+cp "$target_dir/release/plasmacast-search" "$temporary"
 chmod 755 "$temporary"
-mv -f -- "$temporary" "$repo/bin/omacast-search"
-echo "built $repo/bin/omacast-search"
+mv -f -- "$temporary" "$repo/bin/plasmacast-search"
+echo "built $repo/bin/plasmacast-search"

@@ -3,11 +3,11 @@ set -euo pipefail
 
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 command -v qs >/dev/null || { echo 'native transport tests need Quickshell' >&2; exit 1; }
-[[ -x $repo/bin/omacast-search ]] || { echo 'run bin/build-search before native transport tests' >&2; exit 1; }
-fixture=$(mktemp -d /tmp/omacast-search.XXXXXXXX)
-touch "$fixture/.omacast-search-test"
+[[ -x $repo/bin/plasmacast-search ]] || { echo 'run bin/build-search before native transport tests' >&2; exit 1; }
+fixture=$(mktemp -d /tmp/plasmacast-search.XXXXXXXX)
+touch "$fixture/.plasmacast-search-test"
 cleanup() {
-  [[ $fixture == /tmp/omacast-search.* && -f $fixture/.omacast-search-test ]] || return 1
+  [[ $fixture == /tmp/plasmacast-search.* && -f $fixture/.plasmacast-search-test ]] || return 1
   rm -rf -- "$fixture"
 }
 trap cleanup EXIT
@@ -29,8 +29,8 @@ for name in native missing nonexecutable exit0 exit1 malformed hang; do
     malformed) expected="SyntaxError" ;;
     hang) expected="timed out" ;;
   esac
-  if [[ $name == native ]]; then helper="$repo/bin/omacast-search"; fallback=0; fi
-  OMACAST_TEST_HELPER="$helper" OMACAST_EXPECT_FALLBACK="$fallback" OMACAST_EXPECT_FAILURE="$expected" QT_QPA_PLATFORM=offscreen \
+  if [[ $name == native ]]; then helper="$repo/bin/plasmacast-search"; fallback=0; fi
+  PLASMACAST_TEST_HELPER="$helper" PLASMACAST_EXPECT_FALLBACK="$fallback" PLASMACAST_EXPECT_FAILURE="$expected" QT_QPA_PLATFORM=offscreen \
     timeout 8 qs -p "$repo/test-search.qml" > "$fixture/$name.log" 2>&1 || {
       cat "$fixture/$name.log" >&2
       echo "native transport test failed: $name" >&2

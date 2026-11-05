@@ -2,7 +2,7 @@
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 1
-cli=bin/omacast
+cli=bin/plasmacast
 fail=0
 pass() { printf '  ok    %s\n' "$1"; }
 bad() { printf '  FAIL  %s\n' "$1"; fail=1; }

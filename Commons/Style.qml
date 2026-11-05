@@ -2,15 +2,15 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// KDE stand-in for omarchy-shell's Style singleton: only the tokens omacast
+// KDE stand-in for omarchy-shell's Style singleton: only the tokens plasmacast
 // uses. Omarchy reads them from Hyprland and its theme; on Plasma they follow
-// the system font from System Settings → Text & Fonts, so omacast grows and
+// the system font from System Settings → Text & Fonts, so plasmacast grows and
 // shrinks with the rest of the desktop.
 //
 // Environment overrides (set them in the systemd unit or your session):
-//   OMACAST_FONT       family for all launcher text (default: Plasma's UI font)
-//   OMACAST_FONT_SIZE  base size in px; every other size derives from it
-//   OMACAST_RADIUS     corner radius in px (default 8, Breeze-like)
+//   PLASMACAST_FONT       family for all launcher text (default: Plasma's UI font)
+//   PLASMACAST_FONT_SIZE  base size in px; every other size derives from it
+//   PLASMACAST_RADIUS     corner radius in px (default 8, Breeze-like)
 QtObject {
   id: root
 
@@ -27,10 +27,10 @@ QtObject {
     return 13
   }
 
-  property int fontBaseSize: Math.max(10, Math.min(24, Math.round(envNumber("OMACAST_FONT_SIZE", systemFontPx))))
+  property int fontBaseSize: Math.max(10, Math.min(24, Math.round(envNumber("PLASMACAST_FONT_SIZE", systemFontPx))))
   readonly property real fontScale: fontBaseSize / 12
 
-  property int cornerRadius: Math.round(envNumber("OMACAST_RADIUS", 8))
+  property int cornerRadius: Math.round(envNumber("PLASMACAST_RADIUS", 8))
   property int gapsOut: 8
 
   function fontPx(mult) { return Math.max(1, Math.round(fontBaseSize * mult)) }
@@ -52,7 +52,7 @@ QtObject {
   }
 
   readonly property string uiFontFamily: {
-    var override = Quickshell.env("OMACAST_FONT")
+    var override = Quickshell.env("PLASMACAST_FONT")
     return override && override.length > 0 ? override : (Qt.application.font.family || "sans-serif")
   }
 

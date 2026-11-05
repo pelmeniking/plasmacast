@@ -6,7 +6,7 @@ import Quickshell
 // with layer-shell). On Omarchy the plugin runs inside omarchy-shell; here
 // Quickshell runs this directory as its own config:
 //
-//   qs -p /path/to/omacast
+//   qs -p /path/to/plasmacast
 //
 // qs.Commons resolves to ./Commons, the small KDE stand-ins for
 // omarchy-shell's style singletons.

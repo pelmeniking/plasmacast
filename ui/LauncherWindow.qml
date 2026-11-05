@@ -36,7 +36,7 @@ PanelWindow {
   anchors { top: true; bottom: true; left: true; right: true }
   color: "transparent"
   exclusionMode: ExclusionMode.Ignore
-  WlrLayershell.namespace: "omacast"
+  WlrLayershell.namespace: "plasmacast"
   WlrLayershell.layer: WlrLayer.Overlay
   WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
@@ -57,7 +57,7 @@ PanelWindow {
   })
   readonly property var borderSpec: Border.surfaceSpec("menu", "border", Commons.Color.menu.border, Math.max(1, Style.space(2)))
 
-  property var stack: [{ kind: "root", title: "omacast", query: "" }]
+  property var stack: [{ kind: "root", title: "plasmacast", query: "" }]
   readonly property var view: window.stack[window.stack.length - 1]
   property string query: ""
   property int selectedIndex: -1
@@ -146,7 +146,7 @@ PanelWindow {
   }
 
   function popToRoot() {
-    window.stack = [{ kind: "root", title: "omacast", query: "" }]
+    window.stack = [{ kind: "root", title: "plasmacast", query: "" }]
     window.query = ""
     window.rootFilter = "all"
     window.rebuild(true)
@@ -460,8 +460,8 @@ PanelWindow {
     // strings such as "Copied to Clipboard", never user input.
     Util.execArgv(["bash", "-c",
       'dbus-send --session --type=method_call --dest=org.kde.plasmashell /org/kde/osdService org.kde.osdService.showText string:"$1" string:"$2" 2>/dev/null'
-      + ' || notify-send -a omacast -e -t 1500 "$2"',
-      "omacast-hud", "edit-copy", String(text)])
+      + ' || notify-send -a plasmacast -e -t 1500 "$2"',
+      "plasmacast-hud", "edit-copy", String(text)])
   }
 
 

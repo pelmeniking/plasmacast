@@ -8,7 +8,7 @@ const R = require("../core/Ranker.js")
 const F = require("../core/FleaSearch.js")
 const Root = require("../core/RootSearch.js")
 const Frecency = require("../core/Frecency.js")
-const binary = path.join(__dirname, "../bin/omacast-search")
+const binary = path.join(__dirname, "../bin/plasmacast-search")
 
 test("built helper feeds the actual root ranker and sections", { skip: !fs.existsSync(binary), timeout: 10000 }, async t => {
   const child = spawn(binary, [], { stdio: ["pipe", "pipe", "inherit"] })

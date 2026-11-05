@@ -42,7 +42,7 @@ function harness(menuTree) {
 // Fake KDE tools: each prints what the real one prints (see the comments in
 // core/OmarchyMenu.js) or records its arguments NUL-separated.
 function fakeTools(t) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "omacast-kde-"))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "plasmacast-kde-"))
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }))
   const tool = (name, body) => fs.writeFileSync(path.join(dir, name), "#!/bin/bash\n" + body, { mode: 0o755 })
   const record = 'printf "%s\\0" "$0" "$@"\n'
@@ -54,7 +54,7 @@ function fakeTools(t) {
   return { dir, env: { ...process.env, PATH: dir + ":" + process.env.PATH } }
 }
 
-test("the KDE menu parses and only uses providers omacast implements", () => {
+test("the KDE menu parses and only uses providers plasmacast implements", () => {
   assert.equal(parsed.error, "")
   assert.ok(parsed.items.length > 20)
   for (const item of parsed.items) {
@@ -83,7 +83,7 @@ test("top-level KDE menus show at the root, actions only while searching", () =>
   assert.equal(lock.rootSearch.when, "searching")
 })
 
-test("actions run their command and menus open in omacast", () => {
+test("actions run their command and menus open in plasmacast", () => {
   const h = harness(tree)
   assert.deepEqual(h.open("omarchy:system.lock"), { close: true })
   assert.deepEqual(h.shell, ["loginctl lock-session"])

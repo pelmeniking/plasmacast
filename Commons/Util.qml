@@ -2,7 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// KDE stand-in for the parts of omarchy-shell's Util that omacast uses.
+// KDE stand-in for the parts of omarchy-shell's Util that plasmacast uses.
 // alpha/execDetached/execArgv/editsFilter/editedFilter are taken from
 // Omarchy's shell/Commons/Util.qml (MIT, © David Heinemeier Hansson).
 QtObject {

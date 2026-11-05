@@ -1,4 +1,4 @@
-// omacast's KDE actions, in the same format as Omarchy's omarchy-menu.jsonc.
+// plasmacast's KDE actions, in the same format as Omarchy's omarchy-menu.jsonc.
 //
 // Ids nest with dots (system.lock lives in the System menu). Each entry has a
 // label and either an "action" (a bash command), a "provider" (a dynamic
@@ -7,7 +7,7 @@
 // words; "when" is a bash test that hides the entry when it fails.
 //
 // Don't edit this file: add or override entries by id in
-// ~/.config/omacast/menu.jsonc ("Edit omacast Menu" opens it).
+// ~/.config/plasmacast/menu.jsonc ("Edit plasmacast Menu" opens it).
 //
 // Comments must be on their own lines.
 {
@@ -42,7 +42,7 @@
   "screenshot.window": {"iconName":"camera-photo","label":"Screenshot Window","aliases":["active window"],"action":"sleep 0.3; spectacle -a"},
   "screenshot.record": {"iconName":"media-record","label":"Record Region","aliases":["screencast","video","recording"],"action":"spectacle -R region"},
 
-  "omacast": {"iconName":"configure","label":"omacast","aliases":["launcher","settings"]},
-  "omacast.edit-menu": {"iconName":"document-edit","label":"Edit omacast Menu","aliases":["customize","menu.jsonc"],"action":"d=${XDG_CONFIG_HOME:-$HOME/.config}/omacast; mkdir -p \"$d\"; [[ -f $d/menu.jsonc ]] || printf '// Your entries; same format as kde/menu.jsonc in the omacast checkout.\\n{\\n}\\n' > \"$d/menu.jsonc\"; xdg-open \"$d/menu.jsonc\""},
-  "omacast.restart": {"iconName":"view-refresh","label":"Restart omacast","aliases":["reload"],"action":"systemctl --user restart omacast.service"}
+  "plasmacast": {"iconName":"configure","label":"plasmacast","aliases":["launcher","settings"]},
+  "plasmacast.edit-menu": {"iconName":"document-edit","label":"Edit plasmacast Menu","aliases":["customize","menu.jsonc"],"action":"d=${XDG_CONFIG_HOME:-$HOME/.config}/plasmacast; mkdir -p \"$d\"; [[ -f $d/menu.jsonc ]] || printf '// Your entries; same format as kde/menu.jsonc in the plasmacast checkout.\\n{\\n}\\n' > \"$d/menu.jsonc\"; xdg-open \"$d/menu.jsonc\""},
+  "plasmacast.restart": {"iconName":"view-refresh","label":"Restart plasmacast","aliases":["reload"],"action":"systemctl --user restart plasmacast.service"}
 }
