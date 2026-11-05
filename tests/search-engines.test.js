@@ -40,6 +40,7 @@ test("fallback: false makes an engine a quicklink only", () => {
   assert.deepEqual(fallbackTitles([DDG, wiki]), ["Search DuckDuckGo", "Run in Terminal"])
   const quicklink = RS.builtinsFor(engines).find((b) => b.id === "builtin:archwiki-search")
   assert.equal(quicklink.title, "Search ArchWiki")
+  assert.equal(quicklink.arguments[0].placeholder, "Search ArchWiki", "the pill names the engine")
   assert.deepEqual(quicklink.keywords, ["aw"])
   assert.equal(RS.fillArguments(quicklink.run.url, { query: "pacman hooks" }), "https://wiki.archlinux.org/index.php?search=pacman%20hooks")
 })

@@ -346,7 +346,7 @@ Item {
           if (candidate.run.url) {
             var values = (data && data.arguments) || {}
             var missing = RootSearch.missingArgument(candidate.arguments, values)
-            if (missing >= 0) throw new Error("Type a " + candidate.arguments[missing].placeholder.toLowerCase() + " first")
+            if (missing >= 0) throw new Error("Fill in “" + candidate.arguments[missing].placeholder + "” first")
             backend.recordVisit(id, query)
             Util.execArgv(["xdg-open", RootSearch.fillArguments(candidate.run.url, values)])
             return { close: true }

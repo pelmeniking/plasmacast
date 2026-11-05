@@ -65,7 +65,8 @@ function webSearch(engine) {
     subtitle: "Quicklink",
     glyph: engine.icon,
     keywords: engine.keywords,
-    arguments: [{ name: "query", placeholder: "Query", required: true }],
+    // The placeholder names the engine so the pill says where you search. [D]
+    arguments: [{ name: "query", placeholder: "Search " + engine.title, required: true }],
     run: { url: engine.url }
   }
 }
