@@ -44,5 +44,6 @@
 
   "plasmacast": {"iconName":"configure","label":"plasmacast","aliases":["launcher","settings"]},
   "plasmacast.edit-menu": {"iconName":"document-edit","label":"Edit plasmacast Menu","aliases":["customize","menu.jsonc"],"action":"d=${XDG_CONFIG_HOME:-$HOME/.config}/plasmacast; mkdir -p \"$d\"; [[ -f $d/menu.jsonc ]] || printf '// Your entries; same format as kde/menu.jsonc in the plasmacast checkout.\\n{\\n}\\n' > \"$d/menu.jsonc\"; xdg-open \"$d/menu.jsonc\""},
+  "plasmacast.edit-config": {"iconName":"configure","label":"Edit plasmacast Settings","aliases":["config","search engines","duckduckgo","google"],"action":"PATH=\"$HOME/.local/bin:$PATH\" plasmacast config"},
   "plasmacast.restart": {"iconName":"view-refresh","label":"Restart plasmacast","aliases":["reload"],"action":"systemctl --user restart plasmacast.service"}
 }

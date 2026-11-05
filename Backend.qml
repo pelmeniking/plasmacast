@@ -33,6 +33,17 @@ Item {
   readonly property double startedAt: Date.now()
   readonly property var deps: ({ Ranker: Ranker, Frecency: Frecency, OmarchyMenu: OmarchyMenu })
 
+  // Search engines and fallbacks from config.json; see RootSearch.searchEngines.
+  readonly property var engines: RootSearch.searchEngines(backend.config.searchEngines, function(text) {
+    backend.log("warning", "config", "searchEngines: " + text)
+  })
+  readonly property var fallbacks: RootSearch.fallbacksFor(backend.engines)
+  onEnginesChanged: if (rebuildTimer) rebuildTimer.restart()
+
+  function fallbackById(id) {
+    return backend.fallbacks.filter(function(f) { return f.id === id })[0] || null
+  }
+
   property var candidates: []
   property var candidatesById: ({})
   property int candidatesRevision: 0
@@ -111,7 +122,8 @@ Item {
       next.push(app)
     }
     next = next.concat(RootSearch.menuCandidates(menuSource.tree, menuSource.guards, menuSource.providerItems, backend.deps))
-    for (var b = 0; b < RootSearch.BUILTINS.length; b++) next.push(RootSearch.builtinCandidate(RootSearch.BUILTINS[b]))
+    var builtins = RootSearch.builtinsFor(backend.engines)
+    for (var b = 0; b < builtins.length; b++) next.push(RootSearch.builtinCandidate(builtins[b]))
     var byId = ({})
     for (var j = 0; j < next.length; j++) byId[next[j].id] = next[j]
     var entries = FleaSearch.entries(next, Ranker.transliterate)
@@ -135,7 +147,8 @@ Item {
       frecency: frecencyStore.loaded ? frecencyStore.doc.items : ({}),
       nowMs: Date.now(),
       sensitivity: settingsStore.loaded ? settingsStore.doc.general.rootSearchSensitivity : "medium",
-      executables: backend.executables
+      executables: backend.executables,
+      fallbacks: backend.fallbacks
     }
   }
 
@@ -488,7 +501,7 @@ Item {
         if (rowId.indexOf("calculator-history:") === 0) return RootSearch.actionsFor({ kind: "calculator-history" })
         var candidate = backend.decorated(rowId)
         if (!candidate) {
-          var fallback = RootSearch.FALLBACKS.filter(function(f) { return f.id === data.id })[0]
+          var fallback = backend.fallbackById(data.id)
           if (!fallback) throw new Error("Unknown command " + (data && data.id))
           return RootSearch.actionsFor({ kind: "fallback", title: fallback.title })
         }
@@ -507,7 +520,7 @@ Item {
         }
         var candidate = backend.decorated(rowId)
         if (!candidate) {
-          var f = RootSearch.FALLBACKS.filter(function(x) { return x.id === rowId })[0]
+          var f = backend.fallbackById(rowId)
           if (!f) throw new Error("Unknown command " + rowId)
           return RootSearch.aboutFor({ id: f.id, kind: "fallback", title: f.title, typeLabel: "Fallback", url: f.url,
             terminal: !!f.terminal, command: f.terminal ? (RootSearch.forcedCommand(data.query) || String(data.query || "").trim()) : "" }, nowMs)
@@ -520,7 +533,7 @@ Item {
           var confirm = RootSearch.confirmationFor(String(data && data.id || ""), String(data && data.action || "open"))
           if (confirm) return { confirm: confirm }
         }
-        var fallback = RootSearch.FALLBACKS.filter(function(f) { return f.id === (data && data.id) })[0]
+        var fallback = backend.fallbackById(data && data.id)
         if (fallback && fallback.terminal) {
           var typed = String(data.query || "")
           var command = RootSearch.forcedCommand(typed) || typed.trim()

@@ -1,0 +1,6 @@
+{
+  "searchEngines": [
+    { "title": "Google", "url": "https://www.google.com/search?q={query}", "keywords": [] },
+    { "title": "DuckDuckGo", "url": "https://duckduckgo.com/?q={query}", "keywords": ["ddg"] }
+  ]
+}

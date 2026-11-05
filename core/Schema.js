@@ -73,7 +73,10 @@ var configDefaults = {
   remToPxRate: 16,
   workHoursPerDay: 8,
   // "auto" follows the Qt locale; "12h" or "24h" forces a clock. [D]
-  clockFormat: "auto"
+  clockFormat: "auto",
+  // Web searches, in fallback order (RootSearch.searchEngines). null keeps
+  // the defaults; entries are validated there, not here. [D, plasmacast]
+  searchEngines: null
 }
 
 // Values a config key or general setting may take, beyond its type.
@@ -89,6 +92,7 @@ var generalChoices = {
 }
 
 function validConfigValue(key, value) {
+  if (key === "searchEngines") return Array.isArray(value)
   if (typeof value !== typeof configDefaults[key]) return false
   if (configChoices[key]) return configChoices[key].indexOf(value) >= 0
   if (typeof value === "number") return isFinite(value) && value > 0

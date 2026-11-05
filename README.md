@@ -34,6 +34,30 @@ CachyOS with Plasma 6.
 - **Looks native:** colors come from your Plasma color scheme and change live when you switch; text
   uses your system font; feedback uses Plasma's OSD.
 
+### Search engines
+
+Under every query plasmacast offers web searches (Google, then DuckDuckGo by default). Choose and order
+your own with `plasmacast config` (or “Edit plasmacast Settings” in the launcher), which opens
+`~/.config/plasmacast/config.json`:
+
+```json
+{
+  "searchEngines": [
+    { "title": "DuckDuckGo", "url": "https://duckduckgo.com/?q={query}", "keywords": ["ddg"] },
+    { "title": "Startpage", "url": "https://www.startpage.com/do/search?q={query}" },
+    { "title": "ArchWiki", "url": "https://wiki.archlinux.org/index.php?search={query}", "keywords": ["aw"], "fallback": false }
+  ]
+}
+```
+
+- The order is the order under your query; leave an engine out to drop it (`[]` keeps only Run in Terminal).
+- `url` must be http(s) and contain `{query}`.
+- Every engine is also a quicklink: type “ArchWiki” or its keyword `aw`, then the query in the pill.
+  `"fallback": false` makes it a quicklink only.
+- Optional `icon`: a Nerd Font glyph. Changes apply when you save; mistakes show up in `plasmacast log`.
+
+### Your own actions
+
 Add your own entries in `~/.config/plasmacast/menu.jsonc` (“Edit plasmacast Menu” opens it). Same
 format as `kde/menu.jsonc`; the same id overrides, a new one adds:
 
@@ -115,6 +139,7 @@ currency rates (ECB, from `api.frankfurter.dev`, at most every 12 hours); turn i
 plasmacast toggle | show | hide
 plasmacast run <commandId>         # e.g. omarchy:system.lock, app:org.kde.dolphin
 plasmacast call <method> [json]    # any backend method
+plasmacast config                  # open config.json (search engines …)
 plasmacast restart | log | doctor
 ```
 

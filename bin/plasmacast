@@ -43,6 +43,8 @@ Setup
   setup kde [--key K] [--yes]
                          Bind a global shortcut (default Alt+Space). Takes
                          Alt+Space from KRunner, which keeps Alt+F2.
+  config                 Open ~/.config/plasmacast/config.json (search engines and
+                         more), creating it from kde/config.example.json
   uninstall [--yes]      Remove the service and the shortcut, give KRunner
                          its shortcut back
   build-search           Build the optional flea-search helper (needs Rust/cargo)
@@ -332,6 +334,17 @@ cmd_uninstall() {
   echo "your history and settings stay in ${XDG_DATA_HOME:-~/.local/share}/plasmacast and $config_home/plasmacast"
 }
 
+cmd_config() {
+  local dir="$config_home/plasmacast" file="$config_home/plasmacast/config.json"
+  if [[ ! -f $file ]]; then
+    (umask 077 && mkdir -p "$dir" && cp "$repo/kde/config.example.json" "$file") || die "could not create $file"
+    echo "created $file"
+  fi
+  if [[ ${1:-} == --print-path ]]; then echo "$file"; return 0; fi
+  command -v xdg-open >/dev/null && xdg-open "$file" >/dev/null 2>&1 &
+  echo "$file"
+}
+
 cmd_doctor() {
   local bad=0
   check() {
@@ -385,6 +398,7 @@ case "${1:-}" in
     ;;
   restart) systemctl --user restart "$SERVICE" ;;
   log) journalctl --user -u "$SERVICE" -f ;;
+  config) cmd_config "${2:-}" ;;
   doctor) cmd_doctor ;;
   -h|--help|help|"") usage ;;
   *) usage >&2; exit 1 ;;

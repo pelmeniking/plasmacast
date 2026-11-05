@@ -1,45 +1,91 @@
 
 var SUGGESTIONS_LIMIT = 6
 
+// Web searches come from "searchEngines" in config.json [D, plasmacast]:
+// their order is the order of the fallbacks under every query, and each one
+// is also a root quicklink with an inline query pill. Without the key the
+// defaults below apply (upstream's Google, then DuckDuckGo). An engine with
+// "fallback": false is only a quicklink. Ids derive from the title, so
+// aliases and favorites of the defaults survive a custom list that keeps them.
+var DEFAULT_ENGINES = [
+  { title: "Google", url: "https://www.google.com/search?q={query}", icon: "\uf1a0", keywords: [] },
+  { title: "DuckDuckGo", url: "https://duckduckgo.com/?q={query}", icon: "\uf002", keywords: ["ddg"] }
+]
+
+function slugify(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+}
+
+// Normalized engines from the config value; warn(text) gets one line per
+// entry it had to skip.
+function searchEngines(raw, warn) {
+  var list = Array.isArray(raw) ? raw : DEFAULT_ENGINES
+  var out = [], seen = {}
+  for (var i = 0; i < list.length; i++) {
+    var e = list[i]
+    var where = "searchEngines[" + i + "]"
+    if (!e || typeof e !== "object" || Array.isArray(e)) { if (warn) warn(where + " is not an object"); continue }
+    var title = typeof e.title === "string" ? e.title.trim() : ""
+    var url = typeof e.url === "string" ? e.url.trim() : ""
+    var slug = slugify(e.id || title)
+    if (!title || !slug) { if (warn) warn(where + " needs a title"); continue }
+    if (!/^https?:\/\//i.test(url) || url.indexOf("{query}") < 0) { if (warn) warn(where + " (" + title + ") needs an http(s) url containing {query}"); continue }
+    if (seen[slug]) { if (warn) warn(where + " (" + title + ") repeats an earlier engine"); continue }
+    seen[slug] = true
+    out.push({
+      id: "fallback:" + slug, slug: slug, title: title, url: url,
+      icon: typeof e.icon === "string" && e.icon ? e.icon : "\uf002",
+      keywords: Array.isArray(e.keywords) ? e.keywords.filter(function(k) { return typeof k === "string" && k }) : [],
+      fallback: e.fallback !== false
+    })
+  }
+  return out
+}
+
 // Run in Terminal is a plasmacast addition [D]: the query runs as a shell
 // command in the user's terminal. It leads the fallbacks when the query
-// starts with a command on PATH or with ">" (see fallbackRows).
+// starts with a command on PATH or with ">" (see fallbackRows), else it
+// comes after the web searches.
 var TERMINAL_FALLBACK_ID = "fallback:terminal"
 var COMMAND_PREFIX = ">"
+var TERMINAL_FALLBACK = { id: TERMINAL_FALLBACK_ID, title: "Run in Terminal", icon: "\uf120", terminal: true }   // nf-fa-terminal
 
-var FALLBACKS = [
-  { id: "fallback:google", title: "Search Google", icon: "", url: "https://www.google.com/search?q={query}" },
-  { id: "fallback:duckduckgo", title: "Search DuckDuckGo", icon: "", url: "https://duckduckgo.com/?q={query}" },
-  { id: TERMINAL_FALLBACK_ID, title: "Run in Terminal", icon: "\uf120", terminal: true }   // nf-fa-terminal
-]
+function fallbacksFor(engines) {
+  return engines.filter(function(e) { return e.fallback })
+    .map(function(e) { return { id: e.id, title: "Search " + e.title, icon: e.icon, url: e.url } })
+    .concat([TERMINAL_FALLBACK])
+}
 
 // Web searches as root commands with an inline argument pill (ref 04 §2.2
 // "inline argument inputs"; Raycast ships these as quicklinks) [D].
-function webSearch(fallback, keywords) {
+function webSearch(engine) {
   return {
-    id: "builtin:" + fallback.id.slice("fallback:".length) + "-search",
-    title: fallback.title,
+    id: "builtin:" + engine.slug + "-search",
+    title: "Search " + engine.title,
     subtitle: "Quicklink",
-    glyph: fallback.icon,
-    keywords: keywords,
+    glyph: engine.icon,
+    keywords: engine.keywords,
     arguments: [{ name: "query", placeholder: "Query", required: true }],
-    run: { url: fallback.url }
+    run: { url: engine.url }
   }
 }
 
-var BUILTINS = [
-  webSearch(FALLBACKS[0], []),
-  webSearch(FALLBACKS[1], ["ddg"]),
-  {
-    id: "builtin:calculator-history",
-    title: "Calculator History",
-    subtitle: "Calculator",
-    glyph: "\uf1da",                     // nf-fa-history
-    keywords: ["calculator", "calc", "math", "history", "conversions"],
-    run: { push: { kind: "calculator-history", title: "Calculator History" } },
-    rootSearch: { when: "always" }
-  }
-]
+var CALCULATOR_HISTORY_BUILTIN = {
+  id: "builtin:calculator-history",
+  title: "Calculator History",
+  subtitle: "Calculator",
+  glyph: "\uf1da",                     // nf-fa-history
+  keywords: ["calculator", "calc", "math", "history", "conversions"],
+  run: { push: { kind: "calculator-history", title: "Calculator History" } },
+  rootSearch: { when: "always" }
+}
+
+function builtinsFor(engines) {
+  return engines.map(webSearch).concat([CALCULATOR_HISTORY_BUILTIN])
+}
+
+var FALLBACKS = fallbacksFor(searchEngines(null))
+var BUILTINS = builtinsFor(searchEngines(null))
 
 function words(value) {
   return String(value || "").replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[._:/\\-]+/g, " ").trim()
@@ -223,9 +269,9 @@ function commandFor(query, executables) {
   return first && executables && Object.prototype.hasOwnProperty.call(executables, first) ? q : ""
 }
 
-function fallbackRows(query, executables) {
+function fallbackRows(query, executables, fallbacks) {
   var command = commandFor(query, executables)
-  var list = FALLBACKS.slice()
+  var list = (fallbacks || FALLBACKS).slice()
   if (command) list.sort(function(a, b) { return (b.terminal ? 1 : 0) - (a.terminal ? 1 : 0) })
   return list.map(function(f) {
     var q = f.terminal ? (command || String(query || "").trim()) : String(query || "").trim()
@@ -316,11 +362,11 @@ function rootSections(candidates, query, ctx, deps) {
     var sections = []
     // "> command" is an explicit request to run it: the fallbacks lead.
     if (forcedCommand(q) && !filtered) {
-      return [{ id: "fallback-commands", title: "Use “" + forcedCommand(q) + "” with…", rows: fallbackRows(q, ctx.executables) }]
+      return [{ id: "fallback-commands", title: "Use “" + forcedCommand(q) + "” with…", rows: fallbackRows(q, ctx.executables, ctx.fallbacks) }]
     }
     if (ctx.calculation && !filtered) sections.push({ id: "calculator", title: "Calculator", rows: [{ candidate: calculatorCandidate(ctx.calculation), record: null }] })
     if (results.length > 0) sections.push({ id: "results", title: "Results", rows: results })
-    if (!filtered) sections.push({ id: "fallback-commands", title: "Use “" + q + "” with…", rows: fallbackRows(q, ctx.executables) })
+    if (!filtered) sections.push({ id: "fallback-commands", title: "Use “" + q + "” with…", rows: fallbackRows(q, ctx.executables, ctx.fallbacks) })
     return sections
   }
 
@@ -505,6 +551,10 @@ if (typeof module !== "undefined") {
     SUGGESTIONS_LIMIT: SUGGESTIONS_LIMIT,
     FALLBACKS: FALLBACKS,
     TERMINAL_FALLBACK_ID: TERMINAL_FALLBACK_ID,
+    DEFAULT_ENGINES: DEFAULT_ENGINES,
+    searchEngines: searchEngines,
+    fallbacksFor: fallbacksFor,
+    builtinsFor: builtinsFor,
     forcedCommand: forcedCommand,
     commandFor: commandFor,
     fallbackRows: fallbackRows,
