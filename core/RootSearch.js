@@ -65,6 +65,9 @@ function webSearch(engine) {
     subtitle: "Quicklink",
     glyph: engine.icon,
     keywords: engine.keywords,
+    // The first keyword works like an alias you set yourself: typed exactly,
+    // it puts the quicklink on top ("gh" beats Ghostty). Your own alias wins.
+    defaultAlias: engine.keywords.length ? engine.keywords[0].toLowerCase() : "",
     // The placeholder names the engine so the pill says where you search. [D]
     arguments: [{ name: "query", placeholder: "Search " + engine.title, required: true }],
     run: { url: engine.url }
@@ -206,6 +209,7 @@ function builtinCandidate(def) {
     iconName: def.iconName || "",
     run: def.run,
     arguments: def.arguments || [],
+    defaultAlias: def.defaultAlias || "",
     rootSearch: def.rootSearch || { when: "always" }
   }
 }
@@ -236,7 +240,8 @@ function decorate(candidate, ctx, deps) {
   for (var k in candidate) out[k] = candidate[k]
   var settings = (ctx.commands && ctx.commands[candidate.id]) || {}
   var visits = (ctx.frecency && ctx.frecency[candidate.id]) || null
-  out.alias = settings.alias ? String(settings.alias).toLowerCase() : ""
+  out.alias = settings.alias ? String(settings.alias).toLowerCase() : (candidate.defaultAlias || "")
+  out.aliasIsDefault = !settings.alias && !!candidate.defaultAlias
   out.favoriteOrder = typeof settings.favoriteOrder === "number" ? settings.favoriteOrder : null
   out.frecency = visits ? deps.Frecency.score(visits.anchor, ctx.nowMs / 1000) : 1
   out.openedAt = visits ? visits.openedAt : null
@@ -454,7 +459,7 @@ function actionsFor(candidate) {
     list.push({ id: "favorite-down", title: "Move Down in Favorites", shortcut: "Ctrl Alt ↓", section: "favorites", icon: "" })
   }
   list.push({ id: "set-alias", title: candidate.alias ? "Change Alias" : "Set Alias", shortcut: "", section: "configure", icon: "" })
-  if (candidate.alias) list.push({ id: "remove-alias", title: "Remove Alias", shortcut: "", section: "configure", icon: "" })
+  if (candidate.alias && !candidate.aliasIsDefault) list.push({ id: "remove-alias", title: "Remove Alias", shortcut: "", section: "configure", icon: "" })
   if (candidate.frecency > 1) list.push({ id: "reset-ranking", title: "Reset Ranking", shortcut: "", section: "configure", icon: "" })
   list.push({ id: "disable", title: "Disable Command", shortcut: "Alt Shift D", section: "delete", icon: "" })
   return list

@@ -52,7 +52,8 @@ your own with `plasmacast config` (or “Edit plasmacast Settings” in the laun
 
 - The order is the order under your query; leave an engine out to drop it (`[]` keeps only Run in Terminal).
 - `url` must be http(s) and contain `{query}`.
-- Every engine is also a quicklink: type “ArchWiki” or its keyword `aw`, then the query in the pill.
+- Every engine is also a quicklink: type “ArchWiki” or its keyword `aw`, press Tab, then the query.
+  The first keyword works like an alias: typed exactly, it puts the quicklink on top (`gh` beats Ghostty).
   `"fallback": false` makes it a quicklink only.
 - Optional `icon`: a Nerd Font glyph. Changes apply when you save; mistakes show up in `plasmacast log`.
 

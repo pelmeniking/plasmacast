@@ -85,3 +85,19 @@ test("plasmacast config creates a private config.json from the example once", (t
   assert.doesNotMatch(run().stdout, /created/)
   assert.equal(fs.readFileSync(file, "utf8"), '{"searchEngines":[]}', "an existing file is never overwritten")
 })
+
+test("an engine's first keyword is an alias: typed exactly, the quicklink comes first", () => {
+  const engines = RS.searchEngines([{ title: "GitHub", url: "https://github.com/search?q={query}", keywords: ["gh", "git"], fallback: false }])
+  const ghostty = RS.appCandidate({ id: "com.mitchellh.ghostty", name: "Ghostty" })
+  const candidates = [ghostty].concat(RS.builtinsFor(engines).map(RS.builtinCandidate))
+  const ctx = { commands: {}, frecency: {}, nowMs: Date.now() }
+  const first = (q, c) => RS.rootSections(candidates, q, c || ctx, deps)[0].rows[0].candidate.title
+  assert.equal(first("gh"), "Search GitHub")
+  assert.equal(first("gho"), "Ghostty")
+  const gh = RS.decorate(candidates[1], ctx, deps)
+  assert.equal(gh.alias, "gh")
+  assert.ok(!RS.actionsFor(gh).some((a) => a.id === "remove-alias"), "a default alias can't be removed, only overridden")
+  const own = { commands: { "builtin:github-search": { alias: "hub" } }, frecency: {}, nowMs: Date.now() }
+  assert.equal(first("hub", own), "Search GitHub")
+  assert.equal(RS.decorate(candidates[1], own, deps).alias, "hub", "your own alias replaces the default")
+})
