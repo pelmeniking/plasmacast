@@ -51,7 +51,7 @@ test("a query always ends with the fallback section", () => {
   assert.equal(sections.length, 1)
   assert.equal(sections[0].id, "fallback-commands")
   assert.equal(sections[0].title, "Use “zzzz-nothing” with…")
-  assert.deepEqual(titles(sections[0]), ["Search Google", "Search DuckDuckGo"])
+  assert.deepEqual(titles(sections[0]), ["Search Google", "Search DuckDuckGo", "Run in Terminal"])
 })
 
 test("an exact alias puts its command on top (Phase 1 accept)", () => {

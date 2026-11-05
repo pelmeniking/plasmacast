@@ -134,8 +134,35 @@ Item {
       commands: settingsStore.loaded ? settingsStore.doc.commands : ({}),
       frecency: frecencyStore.loaded ? frecencyStore.doc.items : ({}),
       nowMs: Date.now(),
-      sensitivity: settingsStore.loaded ? settingsStore.doc.general.rootSearchSensitivity : "medium"
+      sensitivity: settingsStore.loaded ? settingsStore.doc.general.rootSearchSensitivity : "medium",
+      executables: backend.executables
     }
+  }
+
+  // Command names on the login shell's PATH, so a query like "ping -c3 1.1.1.1"
+  // puts Run in Terminal first. Refreshed whenever the launcher opens.
+  property var executables: null
+
+  Process {
+    id: executablesProc
+    command: ["bash", "-lc", "compgen -c | sort -u"]
+    stdout: StdioCollector {
+      onStreamFinished: {
+        var map = ({})
+        var names = text.split("\n")
+        for (var i = 0; i < names.length; i++) {
+          var name = names[i].trim()
+          // Shell keywords and one-letter names would hijack plain words.
+          if (name.length > 1 && /^[A-Za-z0-9._+-]+$/.test(name) && ["if", "then", "else", "do", "done", "for", "in", "case", "time", "select", "function"].indexOf(name) < 0) map[name] = true
+        }
+        backend.executables = map
+      }
+    }
+  }
+
+  TerminalRunner {
+    id: terminalRunner
+    onFailed: function(message) { backend.log("error", "terminal", message, null) }
   }
 
   function decorated(id) {
@@ -482,7 +509,8 @@ Item {
         if (!candidate) {
           var f = RootSearch.FALLBACKS.filter(function(x) { return x.id === rowId })[0]
           if (!f) throw new Error("Unknown command " + rowId)
-          return RootSearch.aboutFor({ id: f.id, kind: "fallback", title: f.title, typeLabel: "Fallback", url: f.url }, nowMs)
+          return RootSearch.aboutFor({ id: f.id, kind: "fallback", title: f.title, typeLabel: "Fallback", url: f.url,
+            terminal: !!f.terminal, command: f.terminal ? (RootSearch.forcedCommand(data.query) || String(data.query || "").trim()) : "" }, nowMs)
         }
         return RootSearch.aboutFor(candidate, nowMs)
       },
@@ -493,6 +521,13 @@ Item {
           if (confirm) return { confirm: confirm }
         }
         var fallback = RootSearch.FALLBACKS.filter(function(f) { return f.id === (data && data.id) })[0]
+        if (fallback && fallback.terminal) {
+          var typed = String(data.query || "")
+          var command = RootSearch.forcedCommand(typed) || typed.trim()
+          if (!command) throw new Error("Type a command first")
+          terminalRunner.run(command)
+          return { close: true }
+        }
         if (fallback) {
           Util.execArgv(["xdg-open", RootSearch.fallbackUrl(fallback, data.query)])
           return { close: true }
@@ -549,6 +584,7 @@ Item {
   Component.onCompleted: {
     registerServices()
     mkdirs.running = true
+    executablesProc.running = true
   }
 
   onAppLibraryChanged: rebuildTimer.restart()
@@ -570,6 +606,7 @@ Item {
     if (method === "window.visibilityChanged" && data && data.visible) {
       menuSource.refresh()
       calculatorData.refresh()
+      if (!executablesProc.running) executablesProc.running = true
     }
   }
 

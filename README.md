@@ -17,6 +17,11 @@ CachyOS with Plasma 6.
 
 - **Apps** start through `kstart`, like Kickoff. With [`kdotool`](https://github.com/jinliu/kdotool)
   installed, ↵ switches to an app's open window instead of starting another one (Shift+↵ always opens new).
+- **Shell commands:** type `ping -c3 1.1.1.1` and ↵ runs it in your terminal (the one set in System
+  Settings › Default Applications, else Konsole). Run in Terminal leads the fallbacks when the first word
+  is a command on your PATH; start with `>` to force it (`> make deploy`). The command runs in an
+  interactive `$SHELL`, so your aliases work, and the window stays open afterwards. `PLASMACAST_RUN=1`
+  is set there, so your rc file can skip a banner: `[[ -z $PLASMACAST_RUN ]] && fastfetch`.
 - **System Settings pages** are searchable one by one (“Display”, “Bluetooth”, “Shortcuts”…), from the
   same `kcm_*.desktop` entries KRunner uses.
 - **Plasma actions** ([`kde/menu.jsonc`](kde/menu.jsonc)):

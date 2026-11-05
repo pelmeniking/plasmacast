@@ -1,9 +1,16 @@
 
 var SUGGESTIONS_LIMIT = 6
 
+// Run in Terminal is a plasmacast addition [D]: the query runs as a shell
+// command in the user's terminal. It leads the fallbacks when the query
+// starts with a command on PATH or with ">" (see fallbackRows).
+var TERMINAL_FALLBACK_ID = "fallback:terminal"
+var COMMAND_PREFIX = ">"
+
 var FALLBACKS = [
   { id: "fallback:google", title: "Search Google", icon: "", url: "https://www.google.com/search?q={query}" },
-  { id: "fallback:duckduckgo", title: "Search DuckDuckGo", icon: "", url: "https://duckduckgo.com/?q={query}" }
+  { id: "fallback:duckduckgo", title: "Search DuckDuckGo", icon: "", url: "https://duckduckgo.com/?q={query}" },
+  { id: TERMINAL_FALLBACK_ID, title: "Run in Terminal", icon: "\uf120", terminal: true }   // nf-fa-terminal
 ]
 
 // Web searches as root commands with an inline argument pill (ref 04 §2.2
@@ -199,12 +206,34 @@ function rankOptions(ctx) {
   return { sensitivity: ctx.sensitivity || "medium", nowMs: ctx.nowMs, fleaHits: ctx.fleaHits || null }
 }
 
-function fallbackRows(query) {
-  return FALLBACKS.map(function(f) {
+// "> ping -c3 1.1.1.1" -> "ping -c3 1.1.1.1"; "" when the query isn't one.
+function forcedCommand(query) {
+  var q = String(query || "").trim()
+  return q.charAt(0) === COMMAND_PREFIX ? q.slice(1).trim() : ""
+}
+
+// The shell command a query stands for: an explicit ">" command, or the query
+// itself when its first word is an executable on PATH (executables is a
+// name -> true map; null when unknown).
+function commandFor(query, executables) {
+  var forced = forcedCommand(query)
+  if (forced) return forced
+  var q = String(query || "").trim()
+  var first = q.split(/\s+/)[0]
+  return first && executables && Object.prototype.hasOwnProperty.call(executables, first) ? q : ""
+}
+
+function fallbackRows(query, executables) {
+  var command = commandFor(query, executables)
+  var list = FALLBACKS.slice()
+  if (command) list.sort(function(a, b) { return (b.terminal ? 1 : 0) - (a.terminal ? 1 : 0) })
+  return list.map(function(f) {
+    var q = f.terminal ? (command || String(query || "").trim()) : String(query || "").trim()
     return {
       candidate: {
-        id: f.id, type: "command", kind: "fallback", title: f.title, subtitle: f.subtitle || query,
-        typeLabel: "Fallback", glyph: f.icon, url: f.url, rootSearch: { when: "searching" }
+        id: f.id, type: "command", kind: "fallback", title: f.title, subtitle: f.subtitle || q,
+        typeLabel: "Fallback", glyph: f.icon, url: f.url, terminal: !!f.terminal, command: f.terminal ? q : "",
+        rootSearch: { when: "searching" }
       },
       record: null
     }
@@ -285,9 +314,13 @@ function rootSections(candidates, query, ctx, deps) {
     var searchable = decorated.filter(function(c) { return c.rootSearch.when !== "empty" })
     var results = deps.Ranker.rank(searchable, q, opts)
     var sections = []
+    // "> command" is an explicit request to run it: the fallbacks lead.
+    if (forcedCommand(q) && !filtered) {
+      return [{ id: "fallback-commands", title: "Use “" + forcedCommand(q) + "” with…", rows: fallbackRows(q, ctx.executables) }]
+    }
     if (ctx.calculation && !filtered) sections.push({ id: "calculator", title: "Calculator", rows: [{ candidate: calculatorCandidate(ctx.calculation), record: null }] })
     if (results.length > 0) sections.push({ id: "results", title: "Results", rows: results })
-    if (!filtered) sections.push({ id: "fallback-commands", title: "Use “" + q + "” with…", rows: fallbackRows(q) })
+    if (!filtered) sections.push({ id: "fallback-commands", title: "Use “" + q + "” with…", rows: fallbackRows(q, ctx.executables) })
     return sections
   }
 
@@ -452,6 +485,7 @@ function aboutFor(c, nowMs) {
   add("Title", c.title)
   add("Type", c.typeLabel)
   if (c.kind !== "fallback") add("Location", c.subtitle)
+  if (c.terminal) add("Command", c.command)
   add("ID", c.id)
   if (c.kind === "app") add("Desktop Entry", c.appId + ".desktop")
   if (c.kind === "omarchy-action") add("Command", c.action)
@@ -470,6 +504,10 @@ if (typeof module !== "undefined") {
   module.exports = {
     SUGGESTIONS_LIMIT: SUGGESTIONS_LIMIT,
     FALLBACKS: FALLBACKS,
+    TERMINAL_FALLBACK_ID: TERMINAL_FALLBACK_ID,
+    forcedCommand: forcedCommand,
+    commandFor: commandFor,
+    fallbackRows: fallbackRows,
     BUILTINS: BUILTINS,
     FILTERS: FILTERS,
     fillArguments: fillArguments,
