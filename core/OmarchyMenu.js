@@ -19,6 +19,7 @@ function normalizeItem(id, raw) {
     kind: raw.action ? "action" : (raw.target ? "link" : "menu"),
     icon: String(raw.icon || ""),
     iconFont: String(raw.iconFont || ""),
+    iconName: String(raw.iconName || ""),
     label: String(raw.label || id),
     title: String(raw.title || ""),
     description: String(raw.description || ""),
@@ -157,21 +158,27 @@ function shellQuote(value) {
   return "'" + String(value === undefined || value === null ? "" : value).replace(/'/g, "'\\''") + "'"
 }
 
+// Dynamic submenus. Each script prints "label<TAB>value<TAB>current" rows;
+// the KDE tools they call ship with Plasma (plasma-workspace, kconfig) and
+// power-profiles-daemon. A missing tool just yields an empty submenu.
 var PROVIDERS = {
-  "kernels": {
-    script: "current=$(omarchy-kernel get 2>/dev/null); omarchy-kernel list 2>/dev/null | while read -r k; do [[ -z $k ]] && continue; printf '%s\\t%s\\t%s\\n' \"$k\" \"$k\" \"$current\"; done",
-    icon: "",
-    actionFor: function(value) { return "omarchy-kernel set " + shellQuote(value) }
+  "color-schemes": {
+    script: "current=$(kreadconfig6 --file kdeglobals --group General --key ColorScheme 2>/dev/null); plasma-apply-colorscheme --list-schemes 2>/dev/null | sed -n 's/^ \\* //p' | sed 's/ (.*)$//' | while read -r s; do [[ -z $s ]] && continue; printf '%s\\t%s\\t%s\\n' \"$s\" \"$s\" \"$current\"; done",
+    icon: "",
+    iconName: "preferences-desktop-color",
+    actionFor: function(value) { return "plasma-apply-colorscheme " + shellQuote(value) }
   },
-  "fonts": {
-    script: "current=$(omarchy-font-current 2>/dev/null); omarchy-font-list 2>/dev/null | while read -r f; do [[ -z $f ]] && continue; printf '%s\\t%s\\t%s\\n' \"$f\" \"$f\" \"$current\"; done",
-    icon: "",
-    actionFor: function(value) { return "omarchy-font-set " + shellQuote(value) }
+  "global-themes": {
+    script: "current=$(kreadconfig6 --file kdeglobals --group KDE --key LookAndFeelPackage 2>/dev/null); plasma-apply-lookandfeel --list 2>/dev/null | grep -E '^[A-Za-z0-9._-]+$' | while read -r t; do printf '%s\\t%s\\t%s\\n' \"$t\" \"$t\" \"$current\"; done",
+    icon: "",
+    iconName: "preferences-desktop-theme-global",
+    actionFor: function(value) { return "plasma-apply-lookandfeel --apply " + shellQuote(value) }
   },
   "power-profiles": {
-    script: "current=$(powerprofilesctl get 2>/dev/null); omarchy-powerprofiles-list 2>/dev/null | while read -r p; do [[ -z $p ]] && continue; printf '%s\\t%s\\t%s\\n' \"$p\" \"$p\" \"$current\"; done",
+    script: "current=$(powerprofilesctl get 2>/dev/null); powerprofilesctl list 2>/dev/null | sed -n 's/^[ *]*\\([a-z-]*\\):$/\\1/p' | while read -r p; do [[ -z $p ]] && continue; printf '%s\\t%s\\t%s\\n' \"${p^}\" \"$p\" \"$current\"; done",
     icon: "󰐋",
-    actionFor: function(value) { return "omarchy-powerprofiles-set autodetect " + shellQuote(value) }
+    iconName: "preferences-system-power-management",
+    actionFor: function(value) { return "powerprofilesctl set " + shellQuote(value) }
   }
 }
 
@@ -196,7 +203,7 @@ function providerItems(menuId, providerName, output) {
     var id = menuId + "." + slugify(value)
     while (taken[id]) id += "-"
     taken[id] = true
-    var item = normalizeItem(id, { icon: spec.icon, label: label, action: spec.actionFor(value) })
+    var item = normalizeItem(id, { icon: spec.icon, iconName: spec.iconName || "", label: label, action: spec.actionFor(value) })
     item.parent = menuId
     item.isCurrent = value === current
     rows.push(item)

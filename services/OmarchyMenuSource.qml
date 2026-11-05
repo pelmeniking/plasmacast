@@ -6,9 +6,16 @@ import "../core/OmarchyMenu.js" as OmarchyMenu
 Item {
   id: source
 
-  property string omarchyPath: Quickshell.env("OMARCHY_PATH") || "/usr/share/omarchy"
-  readonly property string defaultPath: source.omarchyPath + "/default/omarchy/omarchy-menu.jsonc"
-  readonly property string userPath: Quickshell.env("HOME") + "/.config/omarchy/extensions/omarchy-menu.jsonc"
+  // KDE: the default menu ships with omacast (kde/menu.jsonc, same format as
+  // Omarchy's omarchy-menu.jsonc). Entries in the user file override or add
+  // to it by id, exactly like Omarchy's extensions file.
+  // Quickshell serves files under its config root as qs:@/… URLs, so a
+  // resolvedUrl only names a real path inside omarchy-shell's plugin dir.
+  readonly property string defaultPath: {
+    var url = Qt.resolvedUrl("../kde/menu.jsonc").toString()
+    return /^file:\/\//.test(url) ? decodeURIComponent(url.slice(7)) : Quickshell.shellPath("kde/menu.jsonc")
+  }
+  readonly property string userPath: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/omacast/menu.jsonc"
 
   property var defaultItems: []
   property var userItems: []
@@ -21,20 +28,9 @@ Item {
 
   signal message(string level, string text, var metadata)
 
-  function createGuardCompiler() {
-    try {
-      var path = source.omarchyPath + "/shell/plugins/menu/MenuModel.js"
-      var url = "file://" + path.split("/").map(encodeURIComponent).join("/")
-      source.guardCompiler = Qt.createQmlObject(
-        "import QtQml\nimport " + JSON.stringify(url) + " as Stock\n"
-          + "QtObject { function compile(items) { return Stock.guardScript(items) } }",
-        source, "OmarchyGuardCompiler")
-    } catch (error) {
-      source.guardCompiler = null
-    }
-  }
-
-  Component.onCompleted: { source.createGuardCompiler(); source.refresh() }
+  // Omarchy compiles guards with its own MenuModel.js; on KDE there is none,
+  // so guardCompiler stays null and OmarchyMenu.guardScript is used.
+  Component.onCompleted: source.refresh()
   Component.onDestruction: if (source.guardCompiler) source.guardCompiler.destroy()
 
   function guardItems(tree) {
@@ -192,7 +188,7 @@ Item {
     printErrors: false
     onFileChanged: reload()
     onLoaded: source.load("default", text())
-    onLoadFailed: { source.message("error", "Omarchy menu not found at " + source.defaultPath, null); source.load("default", "") }
+    onLoadFailed: { source.message("error", "KDE menu not found at " + source.defaultPath, null); source.load("default", "") }
   }
 
   FileView {

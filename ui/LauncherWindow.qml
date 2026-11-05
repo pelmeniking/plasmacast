@@ -3,7 +3,6 @@ import Quickshell
 import Quickshell.Wayland
 import qs.Commons
 import qs.Commons as Commons
-import qs.Ui
 import "../core/RootSearch.js" as RootSearch
 import "../core/Rows.js" as Rows
 
@@ -457,7 +456,12 @@ PanelWindow {
   }
 
   function hud(text) {
-    Quickshell.execDetached(["omarchy-shell", "osd", "show", JSON.stringify({ icon: "", message: String(text), duration: 1500 })])
+    // Plasma's own OSD (the volume/brightness popup). HUD texts are fixed
+    // strings such as "Copied to Clipboard", never user input.
+    Util.execArgv(["bash", "-c",
+      'dbus-send --session --type=method_call --dest=org.kde.plasmashell /org/kde/osdService org.kde.osdService.showText string:"$1" string:"$2" 2>/dev/null'
+      + ' || notify-send -a omacast -e -t 1500 "$2"',
+      "omacast-hud", "edit-copy", String(text)])
   }
 
 
@@ -702,8 +706,8 @@ PanelWindow {
         Text {
           anchors.centerIn: parent
           textFormat: Text.PlainText
-          text: window.atRoot ? "" : ""
-          font.family: window.atRoot ? "omarchy" : window.look.fontFamily
+          text: window.atRoot ? "" : ""
+          font.family: window.atRoot ? Style.font.iconFamily : window.look.fontFamily
           font.pixelSize: window.atRoot ? window.px(18) : window.px(15)
           color: window.atRoot ? window.look.accent : window.look.foreground
           opacity: window.atRoot ? 1 : 0.7
@@ -905,9 +909,9 @@ PanelWindow {
         Text {
           anchors.horizontalCenter: parent.horizontalCenter
           textFormat: Text.PlainText
-          text: window.view.kind === "alias" ? "" : ""
+          text: window.view.kind === "alias" ? "" : ""
           color: window.look.accent
-          font.family: window.view.kind === "alias" ? window.look.fontFamily : "omarchy"
+          font.family: window.view.kind === "alias" ? window.look.fontFamily : Style.font.iconFamily
           font.pixelSize: window.px(28)
         }
         Text {
@@ -963,8 +967,8 @@ PanelWindow {
         Text {
           anchors.verticalCenter: parent.verticalCenter
           textFormat: Text.PlainText
-          text: window.toast ? (window.toast.style === "failure" ? "" : "") : ""
-          font.family: window.toast ? window.look.fontFamily : "omarchy"
+          text: window.toast ? (window.toast.style === "failure" ? "" : "") : ""
+          font.family: window.toast ? window.look.fontFamily : Style.font.iconFamily
           font.pixelSize: window.toast ? window.px(12) : window.px(11)
           color: window.toast && window.toast.style === "failure" ? "#e06c75" : window.look.accent
         }

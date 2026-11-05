@@ -1,0 +1,48 @@
+// omacast's KDE actions, in the same format as Omarchy's omarchy-menu.jsonc.
+//
+// Ids nest with dots (system.lock lives in the System menu). Each entry has a
+// label and either an "action" (a bash command), a "provider" (a dynamic
+// submenu from core/OmarchyMenu.js) or nothing (then it is a menu).
+// "iconName" is a freedesktop/Breeze icon name; "aliases" are extra search
+// words; "when" is a bash test that hides the entry when it fails.
+//
+// Don't edit this file: add or override entries by id in
+// ~/.config/omacast/menu.jsonc ("Edit omacast Menu" opens it).
+//
+// Comments must be on their own lines.
+{
+  "system": {"iconName":"system-shutdown","label":"System","aliases":["power","session","power-menu"]},
+  "system.lock": {"iconName":"system-lock-screen","label":"Lock Screen","aliases":["lock"],"action":"loginctl lock-session"},
+  "system.suspend": {"iconName":"system-suspend","label":"Sleep","aliases":["suspend"],"action":"systemctl suspend"},
+  "system.hibernate": {"iconName":"system-suspend-hibernate","label":"Hibernate","when":"grep -qw disk /sys/power/state","action":"systemctl hibernate"},
+  "system.logout": {"iconName":"system-log-out","label":"Log Out","aliases":["logout","sign out"],"action":"dbus-send --session --type=method_call --dest=org.kde.Shutdown /Shutdown org.kde.Shutdown.logout"},
+  "system.reboot": {"iconName":"system-reboot","label":"Restart","aliases":["reboot"],"action":"dbus-send --session --type=method_call --dest=org.kde.Shutdown /Shutdown org.kde.Shutdown.logoutAndReboot"},
+  "system.shutdown": {"iconName":"system-shutdown","label":"Shut Down","aliases":["shutdown","power off","poweroff"],"action":"dbus-send --session --type=method_call --dest=org.kde.Shutdown /Shutdown org.kde.Shutdown.logoutAndShutdown"},
+  "system.power-profile": {"iconName":"preferences-system-power-management","label":"Power Profile","aliases":["performance","power saver","balanced"],"when":"command -v powerprofilesctl","provider":"power-profiles"},
+  "system.restart-plasma": {"iconName":"view-refresh","label":"Restart Plasma Shell","aliases":["plasmashell","panel"],"action":"systemctl --user restart plasma-plasmashell"},
+
+  "appearance": {"iconName":"preferences-desktop-theme","label":"Appearance","aliases":["style","theme"]},
+  "appearance.dark": {"iconName":"weather-clear-night","label":"Dark Mode","aliases":["dark","breeze dark"],"when":"[[ $(kreadconfig6 --file kdeglobals --group General --key ColorScheme) != *Dark* ]]","action":"plasma-apply-colorscheme BreezeDark"},
+  "appearance.light": {"iconName":"weather-clear","label":"Light Mode","aliases":["light","breeze light"],"when":"[[ $(kreadconfig6 --file kdeglobals --group General --key ColorScheme) == *Dark* ]]","action":"plasma-apply-colorscheme BreezeLight"},
+  "appearance.color-scheme": {"iconName":"preferences-desktop-color","label":"Color Scheme","aliases":["colors"],"provider":"color-schemes"},
+  "appearance.global-theme": {"iconName":"preferences-desktop-theme-global","label":"Global Theme","aliases":["look and feel"],"provider":"global-themes"},
+  "appearance.night-light": {"iconName":"redshift-status-on","label":"Toggle Night Light","aliases":["night color","nightlight","blue light"],"action":"sleep 0.1; dbus-send --session --type=method_call --dest=org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut string:'Toggle Night Color'"},
+
+  "windows": {"iconName":"preferences-system-windows","label":"Windows","aliases":["kwin","desktop"]},
+  "windows.overview": {"iconName":"view-grid","label":"Overview","aliases":["expose","mission control"],"action":"sleep 0.1; dbus-send --session --type=method_call --dest=org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut string:'Overview'"},
+  "windows.grid": {"iconName":"view-grid","label":"Grid View","aliases":["virtual desktops"],"action":"sleep 0.1; dbus-send --session --type=method_call --dest=org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut string:'Grid View'"},
+  "windows.present": {"iconName":"preferences-system-windows","label":"Present Windows","aliases":["all windows"],"action":"sleep 0.1; dbus-send --session --type=method_call --dest=org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut string:'ExposeAll'"},
+  "windows.show-desktop": {"iconName":"user-desktop","label":"Show Desktop","aliases":["peek","desktop"],"action":"sleep 0.1; dbus-send --session --type=method_call --dest=org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut string:'Show Desktop'"},
+  "windows.kill": {"iconName":"window-close","label":"Kill Window","aliases":["xkill","force quit"],"action":"sleep 0.1; dbus-send --session --type=method_call --dest=org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut string:'Kill Window'"},
+
+  "screenshot": {"iconName":"camera-photo","label":"Screenshot","aliases":["capture","spectacle","screen"],"when":"command -v spectacle"},
+  "screenshot.region": {"iconName":"camera-photo","label":"Screenshot Region","aliases":["area","snip"],"action":"spectacle -r"},
+  "screenshot.screen": {"iconName":"camera-photo","label":"Screenshot Screen","aliases":["monitor"],"action":"sleep 0.2; spectacle -m"},
+  "screenshot.all": {"iconName":"camera-photo","label":"Screenshot All Screens","aliases":["fullscreen"],"action":"sleep 0.2; spectacle -f"},
+  "screenshot.window": {"iconName":"camera-photo","label":"Screenshot Window","aliases":["active window"],"action":"sleep 0.3; spectacle -a"},
+  "screenshot.record": {"iconName":"media-record","label":"Record Region","aliases":["screencast","video","recording"],"action":"spectacle -R region"},
+
+  "omacast": {"iconName":"configure","label":"omacast","aliases":["launcher","settings"]},
+  "omacast.edit-menu": {"iconName":"document-edit","label":"Edit omacast Menu","aliases":["customize","menu.jsonc"],"action":"d=${XDG_CONFIG_HOME:-$HOME/.config}/omacast; mkdir -p \"$d\"; [[ -f $d/menu.jsonc ]] || printf '// Your entries; same format as kde/menu.jsonc in the omacast checkout.\\n{\\n}\\n' > \"$d/menu.jsonc\"; xdg-open \"$d/menu.jsonc\""},
+  "omacast.restart": {"iconName":"view-refresh","label":"Restart omacast","aliases":["reload"],"action":"systemctl --user restart omacast.service"}
+}

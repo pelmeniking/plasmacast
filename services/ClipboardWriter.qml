@@ -25,7 +25,10 @@ Item {
   // Constant scripts: no caller data ever reaches the command line.
   readonly property string copyScript: 'exec wl-copy'
   // Wait for the launcher to unmap, as omarchy-clipboard-paste-text does.
-  readonly property string pasteScript: 'wl-copy || exit; sleep 0.15; wtype -M shift -k Insert -m shift 2>/dev/null || true'
+  // KWin offers no virtual-keyboard protocol to normal clients, so wtype
+  // fails there; ydotool (uinput, needs ydotoold running) or dotool send the
+  // keystroke instead. Without any of them the answer is still copied.
+  readonly property string pasteScript: 'wl-copy || exit; sleep 0.15; wtype -M shift -k Insert -m shift 2>/dev/null || ydotool key 42:1 110:1 110:0 42:0 >/dev/null 2>&1 || { command -v dotool >/dev/null && echo "key shift+insert" | dotool; } 2>/dev/null || true'
 
   Process {
     id: proc

@@ -1,14 +1,12 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Hyprland
 import qs.Commons
 import "ui"
 
 Item {
   id: root
 
-  property string omarchyPath: Quickshell.env("OMARCHY_PATH")
   property var shell: null
   property var manifest: null
 
@@ -85,12 +83,9 @@ Item {
     onDismissRequested: root.hide()
   }
 
-  GlobalShortcut {
-    appid: "omacast"
-    name: "toggle"
-    description: "Toggle omacast"
-    onPressed: root.toggle()
-  }
+  // KDE: the global shortcut is a KDE service shortcut that runs
+  // `omacast toggle` (see `omacast setup kde`), which lands in the
+  // IpcHandler below. Hyprland's GlobalShortcut protocol does not exist on KWin.
 
   IpcHandler {
     target: "omacast"

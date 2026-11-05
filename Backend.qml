@@ -19,7 +19,8 @@ Item {
 
   readonly property string version: "0.1.0"
   readonly property var paths: Paths.resolve(function(name) { return Quickshell.env(name) })
-  readonly property string desktop: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ? "hyprland" : "unknown"
+  readonly property string desktop: Quickshell.env("KDE_FULL_SESSION") === "true" || /KDE/i.test(Quickshell.env("XDG_CURRENT_DESKTOP") || "") ? "kde"
+    : Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ? "hyprland" : "unknown"
 
   property var appLibrary: null
   property var summon: null
@@ -84,15 +85,31 @@ Item {
   }
 
 
+  // System Settings pages ship as hidden kcm_*.desktop entries (that is how
+  // KRunner and Kickoff find "Display Configuration" and friends), so they
+  // are kept even though they are NoDisplay.
+  function isSettingsModule(entry) {
+    return /^kcm_/.test(String(entry.id || "")) && /^(systemsettings|kcmshell6)\b/.test(String(entry.execString || ""))
+  }
+
   function appEntries() {
     if (backend.appLibrary) return backend.appLibrary.sortedEntries("").map(function(row) { return row.entry })
-    return (DesktopEntries.applications.values || []).filter(function(e) { return !e.noDisplay })
+    return (DesktopEntries.applications.values || []).filter(function(e) { return !e.noDisplay || backend.isSettingsModule(e) })
   }
 
   function rebuildCandidates() {
     var next = []
     var apps = backend.appEntries()
-    for (var i = 0; i < apps.length; i++) if (apps[i] && apps[i].id) next.push(RootSearch.appCandidate(apps[i]))
+    for (var i = 0; i < apps.length; i++) {
+      if (!apps[i] || !apps[i].id) continue
+      var app = RootSearch.appCandidate(apps[i])
+      if (backend.isSettingsModule(apps[i])) {
+        app.subtitle = "System Settings"
+        app.typeLabel = "Settings"
+        app.windowKeys = []   // open the page, don't just focus System Settings
+      }
+      next.push(app)
+    }
     next = next.concat(RootSearch.menuCandidates(menuSource.tree, menuSource.guards, menuSource.providerItems, backend.deps))
     for (var b = 0; b < RootSearch.BUILTINS.length; b++) next.push(RootSearch.builtinCandidate(RootSearch.BUILTINS[b]))
     var byId = ({})
@@ -206,7 +223,7 @@ Item {
 
   function summonPlugin(id, payload) {
     if (backend.summon && backend.summon(id, payload)) return
-    Quickshell.execDetached(["omarchy-shell", "shell", "summon", id, payload || "{}"])
+    backend.log("warning", "exec", "no shell to summon " + id + " from; omarchy-shell plugins don't exist on KDE")
   }
 
   function runShell(command) {
@@ -244,16 +261,19 @@ Item {
   }
 
   function openMenu(item) {
-    if (item.provider && !OmarchyMenu.PROVIDERS[item.provider]) {
-      backend.summonPlugin("omarchy.menu", JSON.stringify({ menu: item.id }))
-      return { close: true }
-    }
+    if (item.provider && !OmarchyMenu.PROVIDERS[item.provider])
+      return { toast: { style: "failure", title: "Unknown menu provider " + item.provider } }
     return { push: { kind: "menu", menuId: item.id, title: item.label } }
   }
 
   function launchApp(candidate) {
-    if (backend.appLibrary) backend.appLibrary.launch(candidate.appId, candidate.title)
-    else Util.execArgv(["uwsm-app", "--", "gtk-launch", candidate.appId + ".desktop"])
+    if (backend.appLibrary) { backend.appLibrary.launch(candidate.appId, candidate.title); return }
+    // kstart goes through KIO's ApplicationLauncherJob like Kickoff does:
+    // startup feedback, a systemd scope per app, Terminal=true handled.
+    // gtk-launch is the fallback outside Plasma.
+    Util.execArgv(["bash", "-c",
+      'if command -v kstart >/dev/null; then exec kstart --application "$1"; fi; exec gtk-launch "$1"',
+      "launch", candidate.appId])
   }
 
   function performAction(data) {
@@ -288,7 +308,7 @@ Item {
             var missing = RootSearch.missingArgument(candidate.arguments, values)
             if (missing >= 0) throw new Error("Type a " + candidate.arguments[missing].placeholder.toLowerCase() + " first")
             backend.recordVisit(id, query)
-            Util.execArgv(["omarchy-launch-browser", RootSearch.fillArguments(candidate.run.url, values)])
+            Util.execArgv(["xdg-open", RootSearch.fillArguments(candidate.run.url, values)])
             return { close: true }
           }
           backend.recordVisit(id, query)
@@ -296,7 +316,7 @@ Item {
           if (candidate.run.summon) backend.summonPlugin(candidate.run.summon, candidate.run.payload || "{}")
           return { close: true }
         case "fallback":
-          Util.execArgv(["omarchy-launch-browser", RootSearch.fallbackUrl(candidate, query)])
+          Util.execArgv(["xdg-open", RootSearch.fallbackUrl(candidate, query)])
           return { close: true }
       }
       throw new Error("Cannot open " + id)
@@ -306,9 +326,6 @@ Item {
       case "open-new":
         backend.recordVisit(id, query)
         backend.launchApp(candidate)
-        return { close: true }
-      case "open-in-omarchy-menu":
-        backend.summonPlugin("omarchy.menu", JSON.stringify({ menu: backend.omarchyRouteFor(candidate) }))
         return { close: true }
       case "copy-command":
       case "copy-id":
@@ -477,7 +494,7 @@ Item {
         }
         var fallback = RootSearch.FALLBACKS.filter(function(f) { return f.id === (data && data.id) })[0]
         if (fallback) {
-          Util.execArgv(["omarchy-launch-browser", RootSearch.fallbackUrl(fallback, data.query)])
+          Util.execArgv(["xdg-open", RootSearch.fallbackUrl(fallback, data.query)])
           return { close: true }
         }
         // The calculator row is the query itself, evaluated again.

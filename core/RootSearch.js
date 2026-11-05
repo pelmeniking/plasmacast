@@ -24,14 +24,6 @@ var BUILTINS = [
   webSearch(FALLBACKS[0], []),
   webSearch(FALLBACKS[1], ["ddg"]),
   {
-    id: "builtin:omarchy-menu",
-    title: "Omarchy Menu",
-    subtitle: "Open the original Omarchy menu",
-    keywords: ["menu", "omarchy"],
-    run: { summon: "omarchy.menu", payload: "{\"menu\":\"root\"}" },
-    rootSearch: { when: "always" }
-  },
-  {
     id: "builtin:calculator-history",
     title: "Calculator History",
     subtitle: "Calculator",
@@ -129,15 +121,17 @@ function menuCandidate(tree, item, guards, deps) {
     type: "command",
     kind: item.kind === "action" ? "omarchy-action" : (item.kind === "link" ? "omarchy-link" : "omarchy-menu"),
     title: item.label,
-    subtitle: crumbs.length > 0 ? crumbs.join(" › ") : "Omarchy",
+    subtitle: crumbs.length > 0 ? crumbs.join(" › ") : "KDE",
     keywords: keywords,
     typeLabel: item.kind === "action" ? "Command" : "Menu",
     menuId: item.id,
     action: item.action,
     target: item.target,
     provider: item.provider,
-    glyph: item.icon,
-    glyphFont: item.iconFont,
+    // A theme icon (iconName, e.g. system-shutdown) wins over a glyph.
+    glyph: item.iconName ? "" : item.icon,
+    glyphFont: item.iconName ? "" : item.iconFont,
+    iconName: item.iconName || "",
     checked: !!(item.isCurrent || (guards && guards.checked && guards.checked[item.id])),
     disabled: !!(guards && guards.disabled && guards.disabled[item.id]),
     rootSearch: { when: crumbs.length === 0 ? "always" : "searching" }
@@ -154,7 +148,8 @@ function builtinCandidate(def) {
     keywords: def.keywords || [],
     typeLabel: "Command",
     glyph: def.glyph || "",
-    glyphFont: def.glyph ? "" : "omarchy",
+    glyphFont: "",
+    iconName: def.iconName || "",
     run: def.run,
     arguments: def.arguments || [],
     rootSearch: def.rootSearch || { when: "always" }
@@ -365,8 +360,6 @@ function actionsFor(candidate) {
   primary.section = "primary"
   list.push(primary)
 
-  if (candidate.kind && candidate.kind.indexOf("omarchy-") === 0)
-    list.push({ id: "open-in-omarchy-menu", title: "Open in Omarchy Menu", shortcut: "Ctrl ↵", section: "primary", icon: "" })
   if (candidate.kind === "fallback") return list
 
   if (candidate.kind === "app") list.push({ id: "open-new", title: "Open New Window", shortcut: "Shift ↵", section: "primary", icon: "" })

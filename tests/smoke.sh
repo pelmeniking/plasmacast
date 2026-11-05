@@ -18,34 +18,26 @@ $cli call settings.getGeneralSettings | grep -q '"popToRootTimeout"' && pass "se
 echo "root search (Phase 1)"
 search() { $cli call rootSearch.search "{\"query\":\"$1\"}"; }
 first() { search "$1" | python3 -I -c 'import json,sys; d=json.load(sys.stdin); print(d["data"][0]["rows"][0]["title"] if d["ok"] and d["data"] else "")'; }
-[[ $(first nightlight) =~ ^Nightlight(\ On|\ Off)?$ ]] && pass "Omarchy menu items are searchable (nightlight)" || bad "Omarchy menu items are searchable (nightlight)"
+[[ $(first "lock screen") == "Lock Screen" ]] && pass "KDE actions are searchable (lock screen)" || bad "KDE actions are searchable (lock screen)"
 [[ $(first "") != "" ]] && pass "empty root has sections" || bad "empty root has sections"
 search zzzz-no-match | grep -q '"id":"fallback-commands"' && pass "fallback section for unmatched queries" || bad "fallback section for unmatched queries"
 count=$($cli call system.info | python3 -I -c 'import json,sys; print(json.load(sys.stdin)["data"]["candidates"])')
-(( count > 300 )) && pass "$count candidates (apps + Omarchy menu)" || bad "only $count candidates"
+(( count > 100 )) && pass "$count candidates (apps, settings pages, KDE actions)" || bad "only $count candidates"
 
-echo "toggle latency (show -> layer mapped, hide -> unmapped; budget 100 ms)"
-sock="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
-events=$(mktemp)
-socat -u "UNIX-CONNECT:$sock" - 2>/dev/null | while IFS= read -r line; do
-  case $line in *layer\>\>omacast*) echo "$(date +%s%N) ${line%%>>*}" >>"$events" ;; esac
-done &
-watcher=$!
-sleep 0.3
+echo "toggle round trip (shortcut -> qs ipc -> launcher; budget 100 ms)"
+# KWin has no layer event stream like Hyprland's socket2, so this times the
+# IPC round trip a shortcut press makes; mapping the surface comes on top.
 $cli hide
 worst=0
 for i in 1 2 3 4 5; do
-  t0=$(date +%s%N); $cli show; sleep 0.3
-  t1=$(date +%s%N); $cli hide; sleep 0.3
-  open=$(grep openlayer "$events" | sed -n "${i}p" | cut -d' ' -f1)
-  close=$(grep closelayer "$events" | sed -n "${i}p" | cut -d' ' -f1)
-  if [[ -z $open || -z $close ]]; then bad "run $i: no layer event seen"; continue; fi
-  show_ms=$(( (open - t0) / 1000000 )); hide_ms=$(( (close - t1) / 1000000 ))
+  t0=$(date +%s%N); $cli show; t1=$(date +%s%N); sleep 0.3
+  [[ $($cli call system.info >/dev/null; "$cli" ping) == ok ]] || bad "run $i: no answer"
+  t2=$(date +%s%N); $cli hide; t3=$(date +%s%N); sleep 0.3
+  show_ms=$(( (t1 - t0) / 1000000 )); hide_ms=$(( (t3 - t2) / 1000000 ))
   printf '        run %d: show %3d ms, hide %3d ms\n' "$i" "$show_ms" "$hide_ms"
   (( show_ms > worst )) && worst=$show_ms
   (( hide_ms > worst )) && worst=$hide_ms
 done
-kill "$watcher" 2>/dev/null; pkill -f "socat -u UNIX-CONNECT:$sock" 2>/dev/null; rm -f "$events"
 (( worst > 0 && worst < 100 )) && pass "worst toggle ${worst} ms" || bad "worst toggle ${worst} ms"
 
 exit $fail

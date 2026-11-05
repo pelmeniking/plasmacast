@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import "../core/FleaSearch.js" as FleaSearch
 
@@ -6,7 +7,11 @@ Item {
   id: service
   property var entries: []
   property var ids: []
-  property string executable: decodeURIComponent(Qt.resolvedUrl("../bin/omacast-search").toString().replace(/^file:\/\//, ""))
+  // Standalone (KDE) runs serve QML as qs:@/… URLs; see OmarchyMenuSource.
+  property string executable: {
+    var url = Qt.resolvedUrl("../bin/omacast-search").toString()
+    return /^file:\/\//.test(url) ? decodeURIComponent(url.slice(7)) : Quickshell.shellPath("bin/omacast-search")
+  }
   property bool disabled: false
   property bool loaded: false
   property int serial: 0

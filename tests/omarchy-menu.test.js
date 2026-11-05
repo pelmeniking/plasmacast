@@ -11,7 +11,7 @@ const sample = `{
   "system.lock": {"icon":"l","label":"Lock","action":"omarchy-system-lock"},
   "system.suspend": {"label":"Suspend","when":"false","action":"systemctl suspend"},
   "style": {"label":"Style"},
-  "style.font": {"label":"Font","provider":"fonts"},
+  "style.font": {"label":"Font","provider":"color-schemes"},
   "link.to-style": {"label":"Go Style","target":"style"},
   "trigger.clip": {"label":"Clipboard","action":"omarchy-shell shell summon omarchy.clipboard"},
 }`
@@ -61,12 +61,13 @@ test("the guard script runs in bash and reports each guard", () => {
 })
 
 test("provider output becomes action rows with quoted commands", () => {
-  const rows = M.providerItems("style.font", "fonts", "JetBrains Mono\tJetBrains Mono\tJetBrains Mono\nIt's Font\tIt's Font\tother\n")
+  const rows = M.providerItems("style.colors", "color-schemes", "Breeze Dark\tBreeze Dark\tBreeze Dark\nIt's Mine\tIt's Mine\tother\n")
   assert.equal(rows.length, 2)
-  assert.equal(rows[0].id, "style.font.jetbrains-mono")
+  assert.equal(rows[0].id, "style.colors.breeze-dark")
   assert.equal(rows[0].isCurrent, true)
-  assert.equal(rows[1].action, "omarchy-font-set 'It'\\''s Font'")
-  assert.equal(rows[1].parent, "style.font")
+  assert.equal(rows[1].action, "plasma-apply-colorscheme 'It'\\''s Mine'")
+  assert.equal(rows[1].parent, "style.colors")
+  assert.equal(rows[1].iconName, "preferences-desktop-color")
 })
 
 test("only a bare summon is run in-process", () => {

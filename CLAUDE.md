@@ -1,5 +1,13 @@
 # CLAUDE.md
 
+> **KDE fork.** This checkout runs on KDE Plasma 6 as a standalone Quickshell
+> config (`shell.qml`), not inside `omarchy-shell`. `Commons/` (and
+> `ui/BorderSurface.qml`, `ui/PointerMoveGate.qml`) are KDE stand-ins for
+> omarchy-shell's `qs.Commons`/`qs.Ui`; KDE actions live in
+> `kde/menu.jsonc`; `bin/omacast` sets up a systemd user service and a
+> kglobalaccel shortcut. See README.md. The Omarchy notes below describe the
+> upstream design.
+
 This repo is a clean-room rebuild of **Raycast for Linux**. The first target is **Omarchy**: Arch Linux + Hyprland, plus Omarchy's own scripts, themes and bindings. The behaviour and interfaces come from a static reverse-engineering pass over Raycast 2.8.2 on macOS, done with the `reverse-engineer-anything` skill. This repo holds that pass's results and no Raycast code.
 
 ## Read these first

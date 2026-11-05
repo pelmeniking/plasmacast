@@ -24,7 +24,7 @@ const menu = OmarchyMenu.buildTree(OmarchyMenu.parse(`{
   "trigger.toggle": {"label":"Toggle"},
   "trigger.toggle.nightlight": {"label":"Nightlight","action":"omarchy-toggle-nightlight"},
   "style": {"label":"Style"},
-  "style.font": {"label":"Font","provider":"fonts"}
+  "style.font": {"label":"Font","provider":"color-schemes"}
 }`).items, [])
 
 function candidates(guards, providerItems) {
@@ -106,7 +106,7 @@ test("a submenu lists its children, and searches its descendants", () => {
 })
 
 test("provider rows are searchable under their menu", () => {
-  const rows = OmarchyMenu.providerItems("style.font", "fonts", "Iosevka\tIosevka\tIosevka\n")
+  const rows = OmarchyMenu.providerItems("style.font", "color-schemes", "Iosevka\tIosevka\tIosevka\n")
   const sections = RS.rootSections(candidates(null, { "style.font": rows }), "iosevka", ctx(), deps)
   const hit = sections[0].rows[0].candidate
   assert.equal(hit.title, "Iosevka")
@@ -120,7 +120,8 @@ test("actions: primary first, favourites and alias offered", () => {
   assert.equal(ids[0], "open")
   assert.ok(ids.includes("favorite-add") && ids.includes("set-alias") && ids.includes("copy-id"))
   const menuItem = RS.decorate(candidates().find((c) => c.id === "omarchy:system.lock"), ctx(), deps)
-  assert.deepEqual(RS.actionsFor(menuItem).slice(0, 2).map((a) => a.id), ["open", "open-in-omarchy-menu"])
+  // KDE: no stock Omarchy menu to hand off to.
+  assert.deepEqual(RS.actionsFor(menuItem).slice(0, 2).map((a) => a.id), ["open", "copy-command"])
 })
 
 test("favourite reordering", () => {
