@@ -3,8 +3,6 @@
 **A Raycast-style launcher for KDE Plasma 6 (Wayland).** It learns what you use, searches your apps,
 every System Settings page and a set of Plasma actions, and follows your color scheme.
 
-Maintained by [pelmeniking](https://github.com/pelmeniking).
-
 > **Status: personal project, provided as is.** I built it for my own desktop, and it works on my
 > machine. [Issues](https://github.com/pelmeniking/plasmacast/issues) are welcome, but I can't promise
 > fixes or a schedule. plasmacast is not an official KDE project, and typecraft doesn't support it:
