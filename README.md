@@ -5,17 +5,25 @@ every System Settings page and a set of Plasma actions, and follows your color s
 
 Maintained by [pelmeniking](https://github.com/pelmeniking).
 
+> **Status: personal project, provided as is.** I built it for my own desktop, and it works on my
+> machine. [Issues](https://github.com/pelmeniking/plasmacast/issues) are welcome, but I can't promise
+> fixes or a schedule. plasmacast is not an official KDE project, and typecraft doesn't support it:
+> please report plasmacast problems here, not upstream.
+
+## Why this exists
+
+The other launchers I'd tried on Linux all felt a bit dull to me. Then I came across omacast and asked
+Claude whether something like it could run on KDE as well. One question led to the next, and
+plasmacast is what came out of it. It wasn't planned; it happened more or less by accident.
+
+## Where it comes from
+
 plasmacast is a fork of [omacast](https://github.com/typecraft-dev/oma-cast) by typecraft, which is
 built for [Omarchy](https://omarchy.org) and runs inside `omarchy-shell` on Hyprland. The search, the
 ranking (a port of Raycast's root-search algorithm with frecency and learned search terms), aliases,
 favorites, the calculator and the Ctrl+K action panel are omacast's. plasmacast replaces everything that
 depended on Omarchy and Hyprland. The port was written with Claude (Anthropic) and is tested on
 CachyOS with Plasma 6.
-
-> **Status: personal project, provided as is.** I built it for my own desktop, and it works on my
-> machine. [Issues](https://github.com/pelmeniking/plasmacast/issues) are welcome, but I can't promise
-> fixes or a schedule. plasmacast is not an official KDE project, and typecraft doesn't support it:
-> please report plasmacast problems here, not upstream.
 
 ## What it does on Plasma
 
