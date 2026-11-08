@@ -3,6 +3,8 @@
 **A Raycast-style launcher for KDE Plasma 6 (Wayland).** It learns what you use, searches your apps,
 every System Settings page and a set of Plasma actions, and follows your color scheme.
 
+Maintained by [pelmeniking](https://github.com/pelmeniking).
+
 plasmacast is a fork of [omacast](https://github.com/typecraft-dev/oma-cast) by typecraft, which is
 built for [Omarchy](https://omarchy.org) and runs inside `omarchy-shell` on Hyprland. The search, the
 ranking (a port of Raycast's root-search algorithm with frecency and learned search terms), aliases,
@@ -10,8 +12,10 @@ favorites, the calculator and the Ctrl+K action panel are omacast's. plasmacast 
 depended on Omarchy and Hyprland. The port was written with Claude (Anthropic) and is tested on
 CachyOS with Plasma 6.
 
-> **Status: personal project, provided as is.** It works on my machine. Issues are welcome, but I
-> can't promise fixes or a schedule. plasmacast is not an official KDE project.
+> **Status: personal project, provided as is.** I built it for my own desktop, and it works on my
+> machine. [Issues](https://github.com/pelmeniking/plasmacast/issues) are welcome, but I can't promise
+> fixes or a schedule. plasmacast is not an official KDE project, and typecraft doesn't support it:
+> please report plasmacast problems here, not upstream.
 
 ## What it does on Plasma
 
@@ -74,7 +78,7 @@ format as `kde/menu.jsonc`; the same id overrides, a new one adds:
 ```sh
 sudo pacman -S --needed quickshell ttf-nerd-fonts-symbols wl-clipboard
 paru -S kdotool-bin                    # optional: focus open windows
-git clone https://github.com/<you>/plasmacast ~/repos/plasmacast
+git clone https://github.com/pelmeniking/plasmacast ~/repos/plasmacast
 ~/repos/plasmacast/bin/plasmacast install     # systemd user service + CLI in ~/.local/bin
 plasmacast setup kde                          # bind Alt+Space (asks first)
 plasmacast doctor
@@ -92,11 +96,6 @@ Optional:
 - Rust (`cargo`): `plasmacast install` then builds the faster, typo-tolerant search helper in `search/`.
 - `systemctl --user edit plasmacast` to set `PLASMACAST_FONT`, `PLASMACAST_FONT_SIZE`,
   `PLASMACAST_RADIUS` or `PLASMACAST_OPACITY` (0.5–1).
-
-### Coming from the omacast KDE port
-
-`plasmacast install` removes the old `omacast` service and CLI link, `plasmacast setup kde` replaces the
-old shortcut, and your history, favorites and aliases move from `omacast` to `plasmacast` on first start.
 
 ### Remove
 
@@ -170,8 +169,8 @@ plasmacast restart            # Quickshell caches QML; restart after edits
 plasmacast log
 ```
 
-## License
+## Credits and license
 
-MIT, like omacast. `ui/PointerMoveGate.qml` and parts of `Commons/Util.qml` come from Omarchy's shell
+Thanks to typecraft for omacast, which does the hard part. MIT, like omacast. `ui/PointerMoveGate.qml` and parts of `Commons/Util.qml` come from Omarchy's shell
 (MIT). plasmacast, like omacast, is a clean-room project: it isn't affiliated with Raycast and contains
 no Raycast code. It isn't affiliated with KDE e.V. either.
