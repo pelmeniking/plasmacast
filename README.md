@@ -25,8 +25,8 @@ CachyOS with Plasma 6.
 
 ## What it does on Plasma
 
-- **Apps** start through `kstart`, like Kickoff. With [`kdotool`](https://github.com/jinliu/kdotool)
-  installed, ↵ switches to an app's open window instead of starting another one (Shift+↵ always opens new).
+- **Apps** start through `kstart`, like Kickoff. If the app already has a window, ↵ switches to it
+  instead of starting another one (Shift+↵ always opens new). KWin is asked over D-Bus; no extra tools.
 - **Shell commands:** type `ping -c3 1.1.1.1` and ↵ runs it in your terminal (the one set in System
   Settings › Default Applications, else Konsole). Run in Terminal leads the fallbacks when the first word
   is a command on your PATH; start with `>` to force it (`> make deploy`). The command runs in an
@@ -83,7 +83,6 @@ format as `kde/menu.jsonc`; the same id overrides, a new one adds:
 
 ```sh
 sudo pacman -S --needed quickshell ttf-nerd-fonts-symbols wl-clipboard
-paru -S kdotool-bin                    # optional: focus open windows
 git clone https://github.com/pelmeniking/plasmacast ~/repos/plasmacast
 ~/repos/plasmacast/bin/plasmacast install     # systemd user service + CLI in ~/.local/bin
 plasmacast setup kde                          # bind Alt+Space (asks first)
@@ -157,7 +156,7 @@ Menu ids keep omacast's `omarchy:` prefix so favorites and history stay compatib
   `Commons/`, small stand-ins for omarchy-shell's style, color and utility singletons (colors from Qt's
   `SystemPalette`, fonts from the system font). `ui/BorderSurface.qml` and `ui/PointerMoveGate.qml`
   replace the two pieces used from `qs.Ui`.
-- `services/AppFocuser.qml` uses `kdotool` instead of `hyprctl`; `services/OmarchyMenuSource.qml`
+- `services/AppFocuser.qml` asks KWin over D-Bus (`bin/plasmacast-focus`) instead of `hyprctl`; `services/OmarchyMenuSource.qml`
   reads `kde/menu.jsonc` plus your file; the submenu providers in `core/OmarchyMenu.js` call
   `plasma-apply-colorscheme`, `plasma-apply-lookandfeel` and `powerprofilesctl`.
 - Window actions invoke KWin's own global-shortcut actions over D-Bus (`invokeShortcut`).

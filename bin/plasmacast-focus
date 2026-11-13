@@ -1,0 +1,44 @@
+#!/bin/bash
+# Focuses an open window of an app instead of starting it again.
+#
+#   plasmacast-focus KEY...    (desktop id or StartupWMClass, any case)
+#
+# Exit 0: a window was activated. 1: no open window matches. 3: KWin could
+# not be asked. plasmacast launches the app on anything but 0.
+#
+# KWin is asked over D-Bus, through the window search KRunner uses
+# (org.kde.KWin /WindowsRunner), and only when an app is opened. Earlier
+# versions used kdotool, which loads a KWin script for every question; with
+# kdotool installed, other programs such as StreamController poll KWin
+# through it several times a second, and the desktop stutters.
+set -u
+
+kwin() { busctl --user call org.kde.KWin "$@" 2>/dev/null; }
+field() { sed -nE 's/.*"'"$1"'" s "([^"]*)".*/\1/p' <<<"$2"; }
+
+command -v busctl >/dev/null || exit 3
+
+keys=()
+for k in "$@"; do
+  [[ -z $k || $k == webapp:* ]] && continue
+  keys+=("${k,,}")
+done
+(( ${#keys[@]} )) || exit 3
+
+# The runner matches by substring on the window title and class; each hit is
+# checked against the window's exact class and desktop file before use.
+for key in "${keys[@]}"; do
+  matches=$(kwin /WindowsRunner org.kde.krunner1 Match s "$key") || exit 3
+  for id in $(grep -oE '"0_\{[0-9a-fA-F-]+\}"' <<<"$matches" | tr -d '"'); do
+    info=$(kwin /KWin org.kde.KWin getWindowInfo s "${id#0_}") || continue
+    class=$(field resourceClass "$info")
+    file=$(field desktopFile "$info")
+    for want in "${keys[@]}"; do
+      if [[ ${class,,} == "$want" || ${file,,} == "$want" ]]; then
+        kwin /WindowsRunner org.kde.krunner1 Run ss "$id" "" >/dev/null || exit 3
+        exit 0
+      fi
+    done
+  done
+done
+exit 1

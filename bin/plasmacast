@@ -362,8 +362,8 @@ cmd_doctor() {
   check "wl-copy is installed (copy answers)" command -v wl-copy
   check "kstart is installed (launch apps)" command -v kstart
   check "a Nerd Font provides the UI glyphs" bash -c "fc-list : family | grep -qi 'nerd font'"
-  if command -v kdotool >/dev/null; then printf '  ok    kdotool is installed (focus open windows)\n'
-  else info "no kdotool: opening an app always starts a new instance (AUR: kdotool)"; fi
+  check "busctl is installed (focus open windows)" command -v busctl
+  if command -v kdotool >/dev/null; then info "kdotool is installed but no longer needed; it can make StreamController stutter the desktop (pacman -R kdotool-bin)"; fi
   if command -v ydotool >/dev/null || command -v dotool >/dev/null; then printf '  ok    ydotool/dotool installed (paste answers)\n'
   else info "no ydotool/dotool: \"Paste Answer\" only copies"; fi
   if [[ -x $repo/bin/plasmacast-search ]]; then printf '  ok    flea-search helper is built\n'
