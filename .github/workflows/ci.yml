@@ -6,10 +6,13 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Every job only reads the repository.
+permissions:
+  contents: read
+
 jobs:
   test:
-    # WarpBuild's 2-vCPU Ubuntu runner.
-    runs-on: warp-ubuntu-latest-x64-2x
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -18,7 +21,6 @@ jobs:
           node-version: 24
 
       # Glob, not a directory: Node 24 doesn't expand `node --test tests/`.
-      # The live Omarchy menu test skips itself when Omarchy isn't installed.
       - name: Unit tests
         run: node --test tests/*.test.js
 
@@ -30,9 +32,25 @@ jobs:
           bin/build-search
           node --test tests/search-integration.test.js
 
-      - name: Shell syntax
-        run: |
-          for script in bin/plasmacast bin/build-search tests/smoke.sh tests/native-transport.sh; do
-            bash -n "$script"
-          done
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
+      # Syntax errors, unquoted variables and other common bash mistakes.
+      - name: ShellCheck
+        run: shellcheck --severity=warning bin/plasmacast bin/build-search bin/plasmacast-focus tests/smoke.sh tests/native-transport.sh
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # Known vulnerabilities (RustSec advisories) in the search helper's
+      # dependencies. Fails when one of the crates in Cargo.lock is affected.
+      - name: cargo audit
+        run: |
+          cargo install --locked cargo-audit
+          cargo audit --file search/Cargo.lock

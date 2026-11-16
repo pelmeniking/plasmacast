@@ -138,8 +138,7 @@ UNIT
   # A unit that was already running keeps the old checkout until restarted.
   systemctl --user restart "$SERVICE"
 
-  local i
-  for i in $(seq 1 100); do
+  for _ in $(seq 1 100); do
     if running; then
       echo "plasmacast is running"
       [[ -f $desktop_file ]] || echo "bind a shortcut with: plasmacast setup kde"
@@ -219,7 +218,7 @@ cmd_setup_kde() {
   local code
   code=$(key_code "$key") || die "can't parse key '$key'; use e.g. Alt+Space, Meta+Space, Ctrl+Alt+K"
 
-  local owner plan=() i
+  local owner plan=()
   owner=$(key_owner "$code")
   if [[ $owner == "$LEGACY_NAME.desktop" || -f $legacy_desktop ]]; then
     plan+=("remove the old $LEGACY_NAME shortcut ($legacy_desktop)")
@@ -238,7 +237,7 @@ cmd_setup_kde() {
     rm "$legacy_desktop" && echo "removed old $legacy_desktop"
     if command -v kbuildsycoca6 >/dev/null; then
       kbuildsycoca6 >/dev/null 2>&1
-      for i in $(seq 1 30); do [[ -z $(key_owner "$code") ]] && break; sleep 0.1; done
+      for _ in $(seq 1 30); do [[ -z $(key_owner "$code") ]] && break; sleep 0.1; done
     fi
   fi
   # KRunner's saved keys move with ~/.config on first start; cover a setup
@@ -264,7 +263,7 @@ cmd_setup_kde() {
   if [[ -f $desktop_file ]] && command -v kbuildsycoca6 >/dev/null; then
     rm "$desktop_file"
     kbuildsycoca6 >/dev/null 2>&1
-    for i in $(seq 1 30); do
+    for _ in $(seq 1 30); do
       kga shortcutKeys "$PLASMACAST_ID" 2>/dev/null | key_codes | grep -q . || break
       sleep 0.1
     done
@@ -287,7 +286,7 @@ DESKTOP
 
   # kglobalaccel picks up new X-KDE-Shortcuts entries when ksycoca changes.
   command -v kbuildsycoca6 >/dev/null && kbuildsycoca6 >/dev/null 2>&1
-  for i in $(seq 1 50); do
+  for _ in $(seq 1 50); do
     if kga shortcutKeys "$PLASMACAST_ID" 2>/dev/null | key_codes | grep -qx "$code"; then
       echo "$key toggles plasmacast"
       return 0

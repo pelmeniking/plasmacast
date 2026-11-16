@@ -70,6 +70,10 @@ plasmacast call <method> [json]   # any backend method, e.g. plasmacast call sys
 plasmacast run <commandId>    # e.g. plasmacast run omarchy:system.lock
 ```
 
+CI (`.github/workflows/ci.yml`) runs on GitHub's own `ubuntu-latest` runner: the
+unit tests, the Rust helper's tests and build, ShellCheck on the bash scripts,
+and `cargo audit` on `search/Cargo.lock`.
+
 `tests/smoke.sh` runs live checks against the running launcher; it shows and
 hides the window but never types.
 
@@ -109,5 +113,3 @@ error shows as "Type X unavailable" with the real cause on the next line.
 - The interface is English only.
 - "Paste Answer" in the calculator needs ydotool or dotool; without them it
   only copies.
-- `.github/workflows/ci.yml` asks for upstream's WarpBuild runner
-  (`warp-ubuntu-latest-x64-2x`), which this fork's account may not have.
