@@ -40,6 +40,18 @@ Item {
   readonly property var fallbacks: RootSearch.fallbacksFor(backend.engines)
   onEnginesChanged: if (rebuildTimer) rebuildTimer.restart()
 
+  // What had to be ignored in config.json and the user's menu.jsonc, as one
+  // line; the launcher shows it as a toast when it opens. Empty when fine.
+  property string configError: ""
+  readonly property var engineWarnings: {
+    var warnings = []
+    RootSearch.searchEngines(backend.config.searchEngines, function(text) { warnings.push(text) })
+    return warnings
+  }
+  readonly property string problemSummary: Schema.problemSummary({
+    config: backend.configError, engines: backend.engineWarnings, menu: menuSource.userError
+  })
+
   function fallbackById(id) {
     return backend.fallbacks.filter(function(f) { return f.id === id })[0] || null
   }
@@ -700,11 +712,13 @@ Item {
     onLoaded: {
       try {
         backend.config = Schema.withConfigDefaults(JSON.parse(text()))
+        backend.configError = ""
       } catch (e) {
         backend.config = Schema.withConfigDefaults(null)
+        backend.configError = String(e && e.message || e)
         backend.log("warning", "config", "ignoring unreadable " + path + ": " + e)
       }
     }
-    onLoadFailed: backend.config = Schema.withConfigDefaults(null)
+    onLoadFailed: { backend.config = Schema.withConfigDefaults(null); backend.configError = "" }
   }
 }

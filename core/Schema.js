@@ -99,6 +99,21 @@ function validConfigValue(key, value) {
   return true
 }
 
+// One line for the launcher's toast when a file the user edits by hand had to
+// be ignored, wholly or in part. problems: {config, menu} are parse errors
+// ("" when fine), engines is the list of searchEngines warnings. "" when
+// there is nothing to report.
+function problemSummary(problems) {
+  var p = problems || {}
+  var list = []
+  if (p.config) list.push("config.json has an error and is ignored: " + p.config)
+  var engines = Array.isArray(p.engines) ? p.engines : []
+  for (var i = 0; i < engines.length; i++) list.push("config.json: " + engines[i])
+  if (p.menu) list.push("menu.jsonc has an error and is ignored: " + p.menu)
+  if (list.length === 0) return ""
+  return list[0] + (list.length > 1 ? " (+" + (list.length - 1) + " more, see plasmacast log)" : "")
+}
+
 function withConfigDefaults(value) {
   var out = {}
   for (var key in configDefaults) out[key] = configDefaults[key]
@@ -120,6 +135,7 @@ if (typeof module !== "undefined") {
     documents: documents,
     configDefaults: configDefaults,
     generalChoices: generalChoices,
-    withConfigDefaults: withConfigDefaults
+    withConfigDefaults: withConfigDefaults,
+    problemSummary: problemSummary
   }
 }

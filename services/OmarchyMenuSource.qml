@@ -25,6 +25,8 @@ Item {
   property bool loading: guardProc.running || providerProc.running
   property int revision: 0
   property var guardCompiler: null
+  // Parse error of the user's menu.jsonc, "" when it is fine or absent.
+  property string userError: ""
 
   signal message(string level, string text, var metadata)
 
@@ -149,7 +151,7 @@ Item {
   function load(which, text) {
     var parsed = OmarchyMenu.parse(text)
     if (parsed.error) source.message("warning", "ignoring unreadable " + (which === "user" ? source.userPath : source.defaultPath) + ": " + parsed.error, null)
-    if (which === "user") source.userItems = parsed.items
+    if (which === "user") { source.userItems = parsed.items; source.userError = parsed.error }
     else source.defaultItems = parsed.items
     source.rebuild()
   }

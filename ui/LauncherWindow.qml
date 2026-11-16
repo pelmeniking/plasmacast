@@ -126,6 +126,8 @@ PanelWindow {
     window.closePopups()
     window.historyIndex = -1
     window.rebuild(true)
+    // A typo in config.json or menu.jsonc would otherwise only show in the log.
+    if (window.backend.problemSummary) window.showToast("failure", window.backend.problemSummary)
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
 
