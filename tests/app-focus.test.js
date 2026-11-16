@@ -19,7 +19,8 @@ function fakeKwin(t, windows, { broken = false } = {}) {
   fs.writeFileSync(path.join(dir, "bin/busctl"), `#!/bin/bash
 ${broken ? "echo 'Call failed: The name is not activatable' >&2; exit 1" : ""}
 dir=${JSON.stringify(dir)}
-shift 4  # --user call org.kde.KWin <path>
+while [[ $1 == --* ]]; do echo "$1" >>"$dir/options"; shift; done
+shift 3  # call org.kde.KWin <path>
 iface=$1 method=$2 sig=$3; shift 3
 echo "$method $*" >>"$dir/calls"
 case $method in
@@ -47,7 +48,8 @@ esac
   const env = { ...process.env, PATH: path.join(dir, "bin") + ":" + process.env.PATH }
   const run = (...keys) => spawnSync(focus, keys, { env, encoding: "utf8" })
   const activated = () => fs.existsSync(path.join(dir, "activated")) ? fs.readFileSync(path.join(dir, "activated"), "utf8").trim() : null
-  return { run, activated }
+  const options = () => fs.readFileSync(path.join(dir, "options"), "utf8")
+  return { run, activated, options }
 }
 
 test("focuses the open window whose class is the app's key", (t) => {
@@ -96,4 +98,17 @@ test("web app and empty keys are skipped", (t) => {
   const kwin = fakeKwin(t, ["gggg-7|chromium|chromium|YouTube"])
   assert.equal(kwin.run("", "webapp:youtube").status, 3)
   assert.equal(kwin.activated(), null)
+})
+
+test("KWin gets two seconds to answer, so a hung KWin can't block a launch", (t) => {
+  const kwin = fakeKwin(t, ["abcd-8|org.kde.dolphin|org.kde.dolphin|Home"])
+  assert.equal(kwin.run("org.kde.dolphin").status, 0)
+  assert.match(kwin.options(), /^--timeout=2$/m)
+})
+
+test("the launcher runs the helper through bash, so a missing helper still exits", () => {
+  const qml = fs.readFileSync(path.join(__dirname, "..", "services/AppFocuser.qml"), "utf8")
+  assert.match(qml, /focuser\.command = \["bash", service\.executable\]/)
+  const missing = spawnSync("bash", [focus + "-missing", "org.kde.dolphin"], { encoding: "utf8" })
+  assert.notEqual(missing.status, 0)
 })

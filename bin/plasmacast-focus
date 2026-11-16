@@ -13,7 +13,8 @@
 # through it several times a second, and the desktop stutters.
 set -u
 
-kwin() { busctl --user call org.kde.KWin "$@" 2>/dev/null; }
+# Two seconds at most: an app must still open when KWin does not answer.
+kwin() { busctl --user --timeout=2 call org.kde.KWin "$@" 2>/dev/null; }
 field() { sed -nE 's/.*"'"$1"'" s "([^"]*)".*/\1/p' <<<"$2"; }
 
 command -v busctl >/dev/null || exit 3

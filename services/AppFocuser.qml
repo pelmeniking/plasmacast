@@ -28,7 +28,9 @@ Item {
     if (service.pending) service.launchRequested(service.pending)
     service.pending = candidate
     focuser.running = false
-    focuser.command = [service.executable].concat(candidate.windowKeys)
+    // Through bash, as NativeSearch does: a missing or non-executable helper
+    // then still ends with an exit code, and the app is launched.
+    focuser.command = ["bash", service.executable].concat(candidate.windowKeys)
     focuser.running = true
   }
 
