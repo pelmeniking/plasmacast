@@ -163,8 +163,6 @@ Menu ids keep omacast's `omarchy:` prefix so favorites and history stay compatib
 - `bin/plasmacast setup kde` writes a `.desktop` file with `X-KDE-Shortcuts` and frees the key from
   KRunner live through kglobalaccel's `setForeignShortcutKeys` (via `gdbus`).
 
-The original omacast README is kept as [`README.omarchy.md`](README.omarchy.md).
-
 ## Development
 
 ```sh

@@ -9,11 +9,9 @@ test("defaults follow the XDG base directory spec", () => {
   assert.equal(p.config, "/home/u/.config/plasmacast")
   assert.equal(p.configFile, "/home/u/.config/plasmacast/config.json")
   assert.equal(p.db, "/home/u/.local/share/plasmacast/db")
-  assert.equal(p.extensions, "/home/u/.local/share/plasmacast/extensions")
   assert.equal(p.cache, "/home/u/.cache/plasmacast")
   assert.equal(p.logs, "/home/u/.local/state/plasmacast/logs")
   assert.equal(p.runtime, "/run/user/1000/plasmacast")
-  assert.equal(p.scriptCommands, "/home/u/.config/plasmacast/script-commands")
 })
 
 test("absolute XDG overrides win, relative ones are ignored", () => {

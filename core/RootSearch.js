@@ -124,7 +124,7 @@ function webappKey(url) {
   return "webapp:" + String(url).replace(/^[a-z]+:\/\//i, "").replace(/\/+$/, "").toLowerCase()
 }
 
-// Keys a Hyprland window class can match for one desktop entry. No single
+// Keys a window's class can match for one desktop entry. No single
 // one covers everything: StartupWMClass is the declared answer but often
 // wrong or absent, the desktop id covers files named after their class, and
 // web apps declare no class at all, so their URL is rebuilt from Exec.
@@ -140,32 +140,6 @@ function appWindowKeys(entry) {
     if (url) add(webappKey(url[0]))
   }
   return keys
-}
-
-// Keys for one window class. Chromium-based browsers build a web app's class
-// off its URL and the profile directory: chrome-web.whatsapp.com__-Default ->
-// web.whatsapp.com. The profile is whatever the user launched with ("Default",
-// "Profile 1" -> Profile_1), so the last dash segment is dropped, not matched.
-function windowClassKeys(windowClass) {
-  var cls = String(windowClass || "").toLowerCase()
-  var keys = [cls]
-  var url = cls.replace(/^(brave|chrome|chromium)-/, "")
-  if (url !== cls) keys.push(webappKey(url.replace(/-[^-]*$/, "").replace(/__/g, "/").replace(/_/g, "/")))
-  return keys
-}
-
-// Address of the most recently focused window of an app, or "" when none is
-// open. focusHistoryID 0 is the focused window, higher is older.
-function findAppWindow(clients, keys) {
-  if (!keys || !keys.length) return ""
-  var best = null
-  for (var i = 0; i < (clients || []).length; i++) {
-    var c = clients[i]
-    if (!c || !c.class || c.mapped === false) continue
-    var matches = windowClassKeys(c.class).some(function(k) { return keys.indexOf(k) >= 0 })
-    if (matches && (!best || c.focusHistoryID < best.focusHistoryID)) best = c
-  }
-  return best ? String(best.address) : ""
 }
 
 function menuCandidate(tree, item, guards, deps) {
@@ -572,8 +546,6 @@ if (typeof module !== "undefined") {
     aboutFor: aboutFor,
     appCandidate: appCandidate,
     appWindowKeys: appWindowKeys,
-    windowClassKeys: windowClassKeys,
-    findAppWindow: findAppWindow,
     menuCandidate: menuCandidate,
     menuCandidates: menuCandidates,
     builtinCandidate: builtinCandidate,

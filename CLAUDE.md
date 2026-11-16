@@ -58,7 +58,7 @@ Much of the code still carries Omarchy names and branches: `OmarchyMenu`,
 menu ids with the `omarchy:` prefix (kept so stored favourites and rankings
 stay valid), `backend.appLibrary`, `summon`, the Hyprland check in
 `Backend.qml`. On KDE `appLibrary` is always null and those branches never
-run. `README.omarchy.md` is upstream's README, kept for reference.
+run.
 
 ## Commands
 
