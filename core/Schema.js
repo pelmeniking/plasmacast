@@ -76,7 +76,10 @@ var configDefaults = {
   clockFormat: "auto",
   // Web searches, in fallback order (RootSearch.searchEngines). null keeps
   // the defaults; entries are validated there, not here. [D, plasmacast]
-  searchEngines: null
+  searchEngines: null,
+  // The All / Applications / Commands filter button (Ctrl+P) beside the root
+  // search; false hides it and leaves every result in one list. [D]
+  rootFilter: true
 }
 
 // Values a config key or general setting may take, beyond its type.

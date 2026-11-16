@@ -138,6 +138,9 @@ currency rates (ECB, from `api.frankfurter.dev`, at most every 12 hours); turn i
 | `Esc` / `Shift+Esc` | Back / back to root |
 | `Ctrl +` / `Ctrl −` / `Ctrl 0` | Zoom |
 
+The All / Applications / Commands filter beside the root search is optional: set `"rootFilter": false` in
+`~/.config/plasmacast/config.json` to hide it and its shortcut.
+
 ## CLI
 
 ```sh
