@@ -24,16 +24,12 @@ Item {
   property var providerItems: ({})
   property bool loading: guardProc.running || providerProc.running
   property int revision: 0
-  property var guardCompiler: null
   // Parse error of the user's menu.jsonc, "" when it is fine or absent.
   property string userError: ""
 
   signal message(string level, string text, var metadata)
 
-  // Omarchy compiles guards with its own MenuModel.js; on KDE there is none,
-  // so guardCompiler stays null and OmarchyMenu.guardScript is used.
   Component.onCompleted: source.refresh()
-  Component.onDestruction: if (source.guardCompiler) source.guardCompiler.destroy()
 
   function guardItems(tree) {
     var items = Object.create(null)
@@ -44,18 +40,6 @@ Item {
       if (item && /^[A-Za-z0-9._-]+$/.test(item.id)) items[item.id] = item
     }
     return items
-  }
-
-  function compileGuards(tree, items) {
-    if (source.guardCompiler) {
-      try {
-        var script = source.guardCompiler.compile(items)
-        if (typeof script === "string") return script
-      } catch (error) {}
-      source.guardCompiler.destroy()
-      source.guardCompiler = null
-    }
-    return OmarchyMenu.guardScript(tree)
   }
 
   function guardKeys(items) {
@@ -105,7 +89,7 @@ Item {
   function refresh() {
     if (!guardProc.running) {
       var items = source.guardItems(source.tree)
-      var script = source.compileGuards(source.tree, items)
+      var script = OmarchyMenu.guardScript(source.tree)
       if (script) {
         guardProc.collected = ""
         guardProc.requestTree = source.tree

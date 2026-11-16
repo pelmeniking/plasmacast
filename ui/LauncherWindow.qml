@@ -12,7 +12,6 @@ PanelWindow {
   id: window
 
   required property var backend
-  property var appLibrary: null
   property bool shown: false
   readonly property bool busy: window.shown && window.backend.loading
   readonly property int loadingFeedbackDelay: 500
@@ -896,7 +895,6 @@ PanelWindow {
           ListView.onReused: selected = index === window.selectedIndex
           ListView.onPooled: selected = false
           look: window.look
-          appLibrary: window.appLibrary
           zoom: window.zoom
           onHovered: function(i, item, mouse) { if (!window.actionPanelOpen && pointerGate.moved(item, mouse)) window.select(i) }
           onClicked: function(i) { window.perform("open", i) }

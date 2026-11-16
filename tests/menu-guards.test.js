@@ -7,7 +7,7 @@ const OmarchyMenu = require("../core/OmarchyMenu.js")
 
 const sourcePath = path.join(__dirname, "../services/OmarchyMenuSource.qml")
 const text = fs.readFileSync(sourcePath, "utf8")
-const methods = ["guardItems", "compileGuards", "guardKeys", "finishGuards", "refresh"]
+const methods = ["guardItems", "guardKeys", "finishGuards", "refresh"]
 
 // QML block sample: "  function refresh() {\n  }".
 function block(signature, indentation) {
@@ -30,12 +30,11 @@ function sampleTree() {
   })).items, [])
 }
 
-// KDE has no OEM guard compiler (Omarchy's MenuModel.js), so guards always
-// come from OmarchyMenu.guardScript.
+// Guards always come from OmarchyMenu.guardScript.
 function harness() {
   const messages = []
   const source = {
-    guardCompiler: null, tree: sampleTree(), guards: { previous: true }, revision: 7,
+    tree: sampleTree(), guards: { previous: true }, revision: 7,
     message: (...args) => messages.push(args), providerMenus: () => [], startNextProvider() {}
   }
   const guardProc = { running: false, collected: "", requestTree: null, expectedGuards: [] }
@@ -64,7 +63,6 @@ function harness() {
 test("startup compiles guards with the built-in script", () => {
   const h = harness()
   h.start()
-  assert.equal(h.source.guardCompiler, null)
   assert.deepEqual(Array.from(h.guardProc.command), ["bash", "-lc", OmarchyMenu.guardScript(h.source.tree)])
   assert.deepEqual(Array.from(h.guardProc.expectedGuards), ["probe:w", "probe:c", "probe:d", "other:w"])
 })

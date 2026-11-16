@@ -19,11 +19,7 @@ Item {
 
   readonly property string version: "0.1.0"
   readonly property var paths: Paths.resolve(function(name) { return Quickshell.env(name) })
-  readonly property string desktop: Quickshell.env("KDE_FULL_SESSION") === "true" || /KDE/i.test(Quickshell.env("XDG_CURRENT_DESKTOP") || "") ? "kde"
-    : Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ? "hyprland" : "unknown"
-
-  property var appLibrary: null
-  property var summon: null
+  readonly property string desktop: Quickshell.env("KDE_FULL_SESSION") === "true" || /KDE/i.test(Quickshell.env("XDG_CURRENT_DESKTOP") || "") ? "kde" : "unknown"
 
   property var config: Schema.withConfigDefaults(null)
   property bool directoriesReady: false
@@ -116,7 +112,6 @@ Item {
   }
 
   function appEntries() {
-    if (backend.appLibrary) return backend.appLibrary.sortedEntries("").map(function(row) { return row.entry })
     return (DesktopEntries.applications.values || []).filter(function(e) { return !e.noDisplay || backend.isSettingsModule(e) })
   }
 
@@ -273,15 +268,8 @@ Item {
 
   // ------------------------------------------------------------- execution
 
-  function summonPlugin(id, payload) {
-    if (backend.summon && backend.summon(id, payload)) return
-    backend.log("warning", "exec", "no shell to summon " + id + " from; omarchy-shell plugins don't exist on KDE")
-  }
-
   function runShell(command) {
-    var summon = OmarchyMenu.summonAction(command)
-    if (summon) backend.summonPlugin(summon.id, summon.payload)
-    else Util.execDetached(command)
+    Util.execDetached(command)
   }
 
   function recordVisit(id, query) {
@@ -304,14 +292,6 @@ Item {
     backend.emit("settings.commandSettingsChanged", { commandId: id })
   }
 
-  function omarchyRouteFor(candidate) {
-    if (candidate.kind === "omarchy-action") {
-      var item = menuSource.tree.items[candidate.menuId]
-      return item && item.parent ? item.parent : "root"
-    }
-    return candidate.kind === "omarchy-link" ? candidate.target : candidate.menuId
-  }
-
   function openMenu(item) {
     if (item.provider && !OmarchyMenu.PROVIDERS[item.provider])
       return { toast: { style: "failure", title: "Unknown menu provider " + item.provider } }
@@ -319,7 +299,6 @@ Item {
   }
 
   function launchApp(candidate) {
-    if (backend.appLibrary) { backend.appLibrary.launch(candidate.appId, candidate.title); return }
     // kstart goes through KIO's ApplicationLauncherJob like Kickoff does:
     // startup feedback, a systemd scope per app, Terminal=true handled.
     // gtk-launch is the fallback outside Plasma.
@@ -365,7 +344,6 @@ Item {
           }
           backend.recordVisit(id, query)
           if (candidate.run.push) return { push: candidate.run.push }
-          if (candidate.run.summon) backend.summonPlugin(candidate.run.summon, candidate.run.payload || "{}")
           return { close: true }
         case "fallback":
           Util.execArgv(["xdg-open", RootSearch.fallbackUrl(candidate, query)])
@@ -440,7 +418,6 @@ Item {
           ready: backend.ready,
           uptimeMs: Date.now() - backend.startedAt,
           candidates: backend.candidates.length,
-          appLibrary: !!backend.appLibrary,
           methods: Rpc.methods(backend.registry)
         }
       },
@@ -612,16 +589,8 @@ Item {
     executablesProc.running = true
   }
 
-  onAppLibraryChanged: rebuildTimer.restart()
-
   Connections {
-    target: backend.appLibrary
-    ignoreUnknownSignals: true
-    function onAppsChanged() { rebuildTimer.restart() }
-  }
-
-  Connections {
-    target: backend.appLibrary ? null : DesktopEntries.applications
+    target: DesktopEntries.applications
     ignoreUnknownSignals: true
     function onValuesChanged() { rebuildTimer.restart() }
   }

@@ -54,11 +54,9 @@ and node `require` must both work, so a module never imports another one, and
 it exports through `if (typeof module !== "undefined") module.exports = …`.
 QML wires the modules together.
 
-Much of the code still carries Omarchy names and branches: `OmarchyMenu`,
-menu ids with the `omarchy:` prefix (kept so stored favourites and rankings
-stay valid), `backend.appLibrary`, `summon`, the Hyprland check in
-`Backend.qml`. On KDE `appLibrary` is always null and those branches never
-run.
+Some names still say Omarchy: the `OmarchyMenu` files, and menu ids with the
+`omarchy:` prefix, which is kept so stored favourites and rankings stay valid.
+The code paths for omarchy-shell and Hyprland themselves are gone.
 
 ## Commands
 

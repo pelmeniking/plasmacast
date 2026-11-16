@@ -211,11 +211,6 @@ function providerItems(menuId, providerName, output) {
   return rows
 }
 
-function summonAction(action) {
-  var m = /^omarchy-shell shell summon ([A-Za-z0-9._-]+)(?: '([^']*)')?$/.exec(String(action || "").trim())
-  return m ? { id: m[1], payload: m[2] || "{}" } : null
-}
-
 if (typeof module !== "undefined") {
   module.exports = {
     stripJsonc: stripJsonc,
@@ -229,7 +224,6 @@ if (typeof module !== "undefined") {
     shellQuote: shellQuote,
     PROVIDERS: PROVIDERS,
     providerItems: providerItems,
-    summonAction: summonAction,
     slugify: slugify
   }
 }

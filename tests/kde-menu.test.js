@@ -30,8 +30,7 @@ function harness(menuTree) {
   const backend = {
     decorated: id => candidates.find(c => c.id === id),
     recordVisit() {},
-    runShell: command => shell.push(command),
-    summonPlugin: () => { throw new Error("KDE has no plugins to summon") }
+    runShell: command => shell.push(command)
   }
   const context = vm.createContext({ backend, menuSource: { tree: menuTree }, OmarchyMenu })
   backend.openMenu = backendFunction("openMenu", "item", context)

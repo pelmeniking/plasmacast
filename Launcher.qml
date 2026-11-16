@@ -7,11 +7,6 @@ import "ui"
 Item {
   id: root
 
-  property var shell: null
-  property var manifest: null
-
-  readonly property string pluginId: (root.manifest && root.manifest.id) || "typecraft.plasmacast"
-
   property bool opened: false
   property double openedAt: 0
 
@@ -35,16 +30,10 @@ Item {
 
   function show() {
     if (root.opened) return
-    if (root.shell && root.shell.summon(root.pluginId, "{}")) return
     root.open("{}")
   }
 
   function hide() {
-    if (!root.opened) return
-    if (root.shell && root.shell.hide(root.pluginId)) {
-      root.close()
-      return
-    }
     root.close()
   }
 
@@ -71,15 +60,12 @@ Item {
 
   Backend {
     id: backend
-    appLibrary: root.shell ? root.shell.appLibrary : null
-    summon: function(id, payload) { return root.shell ? root.shell.summon(id, payload) : false }
   }
 
   LauncherWindow {
     id: launcher
     shown: root.opened
     backend: backend
-    appLibrary: backend.appLibrary
     onDismissRequested: root.hide()
   }
 

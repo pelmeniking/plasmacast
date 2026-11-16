@@ -25,7 +25,6 @@ Item {
 
   property bool selected: false
   property var look: null
-  property var appLibrary: null
   property real zoom: 1
 
   signal hovered(int index, var item, var mouse)
@@ -163,7 +162,7 @@ Item {
         asynchronous: true
         sourceSize.width: width * Screen.devicePixelRatio
         sourceSize.height: height * Screen.devicePixelRatio
-        source: !visible ? "" : (row.appLibrary ? row.appLibrary.iconSource(row.iconName) : Quickshell.iconPath(row.iconName, "application-x-executable"))
+        source: !visible ? "" : Quickshell.iconPath(row.iconName, "application-x-executable")
       }
 
       Text {

@@ -70,12 +70,6 @@ test("provider output becomes action rows with quoted commands", () => {
   assert.equal(rows[1].iconName, "preferences-desktop-color")
 })
 
-test("only a bare summon is run in-process", () => {
-  assert.deepEqual(M.summonAction("omarchy-shell shell summon omarchy.clipboard"), { id: "omarchy.clipboard", payload: "{}" })
-  assert.deepEqual(M.summonAction(`omarchy-shell shell summon omarchy.image-picker '{"source":"themes"}'`), { id: "omarchy.image-picker", payload: '{"source":"themes"}' })
-  assert.equal(M.summonAction("omarchy-shell shell summon x; rm -rf ~"), null)
-})
-
 const shipped = path.join(process.env.OMARCHY_PATH || "/usr/share/omarchy", "default/omarchy/omarchy-menu.jsonc")
 test("the installed Omarchy menu parses completely", { skip: !fs.existsSync(shipped) }, () => {
   const r = M.parse(fs.readFileSync(shipped, "utf8"))
