@@ -145,13 +145,14 @@ The All / Applications / Commands filter beside the root search is optional: set
 
 ```sh
 plasmacast toggle | show | hide
-plasmacast run <commandId>         # e.g. omarchy:system.lock, app:org.kde.dolphin
+plasmacast run <commandId>         # e.g. menu:system.lock, app:org.kde.dolphin
 plasmacast call <method> [json]    # any backend method
 plasmacast config                  # open config.json (search engines …)
 plasmacast restart | log | doctor
 ```
 
-Menu ids keep omacast's `omarchy:` prefix so favorites and history stay compatible with upstream.
+Menu ids start with `menu:`. They were `omarchy:` before; stored favorites, aliases and rankings are
+renamed on first start, and `plasmacast run omarchy:…` still works.
 
 ## How the port works
 
@@ -159,8 +160,8 @@ Menu ids keep omacast's `omarchy:` prefix so favorites and history stay compatib
   `Commons/`, small stand-ins for omarchy-shell's style, color and utility singletons (colors from Qt's
   `SystemPalette`, fonts from the system font). `ui/BorderSurface.qml` and `ui/PointerMoveGate.qml`
   replace the two pieces used from `qs.Ui`.
-- `services/AppFocuser.qml` asks KWin over D-Bus (`bin/plasmacast-focus`) instead of `hyprctl`; `services/OmarchyMenuSource.qml`
-  reads `kde/menu.jsonc` plus your file; the submenu providers in `core/OmarchyMenu.js` call
+- `services/AppFocuser.qml` asks KWin over D-Bus (`bin/plasmacast-focus`) instead of `hyprctl`; `services/MenuSource.qml`
+  reads `kde/menu.jsonc` plus your file; the submenu providers in `core/MenuTree.js` call
   `plasma-apply-colorscheme`, `plasma-apply-lookandfeel` and `powerprofilesctl`.
 - Window actions invoke KWin's own global-shortcut actions over D-Bus (`invokeShortcut`).
 - `bin/plasmacast setup kde` writes a `.desktop` file with `X-KDE-Shortcuts` and frees the key from

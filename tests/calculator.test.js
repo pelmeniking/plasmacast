@@ -164,7 +164,7 @@ test("history is newest first, unique, pruned after 90 days and capped", () => {
 })
 
 test("root search puts the Calculator section first; ↵ copies, Ctrl ↵ pastes", () => {
-  const deps = { Ranker: require("../core/Ranker.js"), Frecency: require("../core/Frecency.js"), OmarchyMenu: require("../core/OmarchyMenu.js") }
+  const deps = { Ranker: require("../core/Ranker.js"), Frecency: require("../core/Frecency.js"), MenuTree: require("../core/MenuTree.js") }
   const ctx = { commands: {}, frecency: {}, nowMs: NOW, sensitivity: "medium", calculation: C.evaluate("2+2", env) }
   const sections = RS.rootSections(RS.BUILTINS.map(RS.builtinCandidate), "2+2", ctx, deps)
   assert.equal(sections[0].id, "calculator")

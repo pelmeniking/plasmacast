@@ -13,7 +13,7 @@ import Quickshell.Io
 Item {
   id: service
   property var pending: null
-  // Standalone (KDE) runs serve QML as qs:@/… URLs; see OmarchyMenuSource.
+  // Standalone (KDE) runs serve QML as qs:@/… URLs; see MenuSource.
   property string executable: {
     var url = Qt.resolvedUrl("../bin/plasmacast-focus").toString()
     return /^file:\/\//.test(url) ? decodeURIComponent(url.slice(7)) : Quickshell.shellPath("bin/plasmacast-focus")

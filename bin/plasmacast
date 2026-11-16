@@ -34,7 +34,7 @@ Usage: plasmacast <command> [args]
 Launcher
   toggle                 Show or hide the launcher
   show | hide            Show or hide it
-  run <commandId>        Open a command directly, e.g. plasmacast run omarchy:system.lock
+  run <commandId>        Open a command directly, e.g. plasmacast run menu:system.lock
   call <method> [json]   Call a backend method, e.g. plasmacast call system.info
 
 Setup

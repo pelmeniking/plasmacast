@@ -3,9 +3,9 @@ const assert = require("node:assert/strict")
 const fs = require("node:fs")
 const path = require("node:path")
 const vm = require("node:vm")
-const OmarchyMenu = require("../core/OmarchyMenu.js")
+const MenuTree = require("../core/MenuTree.js")
 
-const sourcePath = path.join(__dirname, "../services/OmarchyMenuSource.qml")
+const sourcePath = path.join(__dirname, "../services/MenuSource.qml")
 const text = fs.readFileSync(sourcePath, "utf8")
 const methods = ["guardItems", "guardKeys", "finishGuards", "refresh"]
 
@@ -24,13 +24,13 @@ function method(name) {
 }
 
 function sampleTree() {
-  return OmarchyMenu.buildTree(OmarchyMenu.parse(JSON.stringify({
+  return MenuTree.buildTree(MenuTree.parse(JSON.stringify({
     probe: { when: "true", checked: "false", disabled: "custom-check --literal '*'" },
     other: { when: "false" }
   })).items, [])
 }
 
-// Guards always come from OmarchyMenu.guardScript.
+// Guards always come from MenuTree.guardScript.
 function harness() {
   const messages = []
   const source = {
@@ -39,7 +39,7 @@ function harness() {
   }
   const guardProc = { running: false, collected: "", requestTree: null, expectedGuards: [] }
   const context = vm.createContext({
-    source, guardProc, providerProc: { running: true }, OmarchyMenu
+    source, guardProc, providerProc: { running: true }, MenuTree
   })
   for (const name of methods) {
     vm.runInContext(method(name), context)
@@ -63,7 +63,7 @@ function harness() {
 test("startup compiles guards with the built-in script", () => {
   const h = harness()
   h.start()
-  assert.deepEqual(Array.from(h.guardProc.command), ["bash", "-lc", OmarchyMenu.guardScript(h.source.tree)])
+  assert.deepEqual(Array.from(h.guardProc.command), ["bash", "-lc", MenuTree.guardScript(h.source.tree)])
   assert.deepEqual(Array.from(h.guardProc.expectedGuards), ["probe:w", "probe:c", "probe:d", "other:w"])
 })
 
@@ -126,7 +126,7 @@ test("a response for an old tree is discarded and the current tree is refreshed"
   const previous = h.source.guards
   h.start()
   const requested = h.guardProc.requestTree
-  h.source.tree = OmarchyMenu.buildTree(OmarchyMenu.parse('{"latest":{"checked":"true"}}').items, [])
+  h.source.tree = MenuTree.buildTree(MenuTree.parse('{"latest":{"checked":"true"}}').items, [])
   h.source.refresh()
   assert.equal(h.guardProc.requestTree, requested)
   h.exit(0)
@@ -142,7 +142,7 @@ test("a response for an old tree is discarded and the current tree is refreshed"
 
 test("empty guard scripts do not launch a process", () => {
   const h = harness()
-  h.source.tree = OmarchyMenu.buildTree([], [])
+  h.source.tree = MenuTree.buildTree([], [])
   h.start()
   assert.equal(h.guardProc.running, false)
   assert.equal(h.guardProc.requestTree, null)

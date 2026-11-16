@@ -54,9 +54,11 @@ and node `require` must both work, so a module never imports another one, and
 it exports through `if (typeof module !== "undefined") module.exports = …`.
 QML wires the modules together.
 
-Some names still say Omarchy: the `OmarchyMenu` files, and menu ids with the
-`omarchy:` prefix, which is kept so stored favourites and rankings stay valid.
-The code paths for omarchy-shell and Hyprland themselves are gone.
+Menu ids start with `menu:`. Until November 2026 they were `omarchy:`; the
+`menu-ids` migrations in `core/Schema.js` rename stored favourites, aliases and
+rankings, and `plasmacast run` still accepts the old prefix. The code paths
+for omarchy-shell and Hyprland are gone; comments that name Omarchy say where
+a file or idea came from.
 
 ## Commands
 
@@ -67,7 +69,7 @@ plasmacast restart            # restart the service
 plasmacast log                # follow its log
 plasmacast doctor             # check that the pieces are in place
 plasmacast call <method> [json]   # any backend method, e.g. plasmacast call system.info
-plasmacast run <commandId>    # e.g. plasmacast run omarchy:system.lock
+plasmacast run <commandId>    # e.g. plasmacast run menu:system.lock
 ```
 
 CI (`.github/workflows/ci.yml`) runs on GitHub's own `ubuntu-latest` runner: the

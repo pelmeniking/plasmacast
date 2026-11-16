@@ -1,16 +1,15 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../core/OmarchyMenu.js" as OmarchyMenu
+import "../core/MenuTree.js" as MenuTree
 
 Item {
   id: source
 
-  // KDE: the default menu ships with plasmacast (kde/menu.jsonc, same format as
-  // Omarchy's omarchy-menu.jsonc). Entries in the user file override or add
-  // to it by id, exactly like Omarchy's extensions file.
-  // Quickshell serves files under its config root as qs:@/… URLs, so a
-  // resolvedUrl only names a real path inside omarchy-shell's plugin dir.
+  // The default menu ships with plasmacast (kde/menu.jsonc). Entries in the
+  // user file override or add to it by id.
+  // Quickshell serves files under its config root as qs:@/… URLs, so
+  // resolvedUrl may not name a real path; shellPath does.
   readonly property string defaultPath: {
     var url = Qt.resolvedUrl("../kde/menu.jsonc").toString()
     return /^file:\/\//.test(url) ? decodeURIComponent(url.slice(7)) : Quickshell.shellPath("kde/menu.jsonc")
@@ -19,7 +18,7 @@ Item {
 
   property var defaultItems: []
   property var userItems: []
-  property var tree: OmarchyMenu.buildTree([], [])
+  property var tree: MenuTree.buildTree([], [])
   property var guards: ({ when: {}, checked: {}, disabled: {} })
   property var providerItems: ({})
   property bool loading: guardProc.running || providerProc.running
@@ -76,12 +75,12 @@ Item {
         return
       }
     }
-    source.guards = OmarchyMenu.parseGuardOutput(guardProc.collected)
+    source.guards = MenuTree.parseGuardOutput(guardProc.collected)
     source.revision++
   }
 
   function rebuild() {
-    source.tree = OmarchyMenu.buildTree(source.defaultItems, source.userItems)
+    source.tree = MenuTree.buildTree(source.defaultItems, source.userItems)
     source.revision++
     source.refresh()
   }
@@ -89,7 +88,7 @@ Item {
   function refresh() {
     if (!guardProc.running) {
       var items = source.guardItems(source.tree)
-      var script = OmarchyMenu.guardScript(source.tree)
+      var script = MenuTree.guardScript(source.tree)
       if (script) {
         guardProc.collected = ""
         guardProc.requestTree = source.tree
@@ -108,7 +107,7 @@ Item {
     var out = []
     for (var i = 0; i < source.tree.order.length; i++) {
       var item = source.tree.items[source.tree.order[i]]
-      if (item.provider && OmarchyMenu.PROVIDERS[item.provider]) out.push(item.id)
+      if (item.provider && MenuTree.PROVIDERS[item.provider]) out.push(item.id)
     }
     return out
   }
@@ -125,7 +124,7 @@ Item {
     }
     var menuId = source.providerQueue[0]
     source.providerQueue = source.providerQueue.slice(1)
-    var spec = OmarchyMenu.PROVIDERS[source.tree.items[menuId].provider]
+    var spec = MenuTree.PROVIDERS[source.tree.items[menuId].provider]
     providerProc.menuId = menuId
     providerProc.collected = ""
     providerProc.command = ["bash", "-lc", spec.script]
@@ -133,7 +132,7 @@ Item {
   }
 
   function load(which, text) {
-    var parsed = OmarchyMenu.parse(text)
+    var parsed = MenuTree.parse(text)
     if (parsed.error) source.message("warning", "ignoring unreadable " + (which === "user" ? source.userPath : source.defaultPath) + ": " + parsed.error, null)
     if (which === "user") { source.userItems = parsed.items; source.userError = parsed.error }
     else source.defaultItems = parsed.items
@@ -161,7 +160,7 @@ Item {
       if (item) {
         var next = ({})
         for (var k in source.pendingProviderItems) next[k] = source.pendingProviderItems[k]
-        next[providerProc.menuId] = OmarchyMenu.providerItems(providerProc.menuId, item.provider, providerProc.collected)
+        next[providerProc.menuId] = MenuTree.providerItems(providerProc.menuId, item.provider, providerProc.collected)
         source.pendingProviderItems = next
       }
       source.startNextProvider()

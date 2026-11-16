@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import "ui"
+import "core/Schema.js" as Schema
 
 Item {
   id: root
@@ -44,6 +45,8 @@ Item {
 
   function run(commandId) {
     // `plasmacast run` is explicit, so it skips the confirmation alert.
+    // Shortcuts and scripts written before the rename still say "omarchy:".
+    commandId = Schema.currentId(commandId)
     var r = backend.callSync("rootSearch.performAction", { id: commandId, action: "open", query: "", confirmed: true })
     if (!r.ok) return r
     var outcome = r.data || {}

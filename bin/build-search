@@ -3,8 +3,8 @@ set -euo pipefail
 
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 command -v cargo >/dev/null || { echo "plasmacast: building search needs Rust (cargo)" >&2; exit 1; }
-# The build goes outside the plugin folder: omarchy-shell watches that folder
-# and would reload the plugin for every file cargo writes.
+# The build goes outside the checkout: Quickshell watches that folder and
+# would reload the launcher for every file cargo writes.
 target_dir=${CARGO_TARGET_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/plasmacast/search-target}
 [[ $target_dir == /* ]] || target_dir="$PWD/$target_dir"
 cargo build --locked --release --manifest-path "$repo/search/Cargo.toml" --target-dir "$target_dir"

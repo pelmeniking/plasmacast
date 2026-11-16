@@ -3,7 +3,7 @@ const assert = require("node:assert/strict")
 const fs = require("node:fs")
 const path = require("node:path")
 const { execFileSync } = require("node:child_process")
-const M = require("../core/OmarchyMenu.js")
+const M = require("../core/MenuTree.js")
 
 const sample = `{
   // comment line
@@ -68,14 +68,4 @@ test("provider output becomes action rows with quoted commands", () => {
   assert.equal(rows[1].action, "plasma-apply-colorscheme 'It'\\''s Mine'")
   assert.equal(rows[1].parent, "style.colors")
   assert.equal(rows[1].iconName, "preferences-desktop-color")
-})
-
-const shipped = path.join(process.env.OMARCHY_PATH || "/usr/share/omarchy", "default/omarchy/omarchy-menu.jsonc")
-test("the installed Omarchy menu parses completely", { skip: !fs.existsSync(shipped) }, () => {
-  const r = M.parse(fs.readFileSync(shipped, "utf8"))
-  assert.equal(r.error, "")
-  assert.ok(r.items.length > 300, "expected the full menu, got " + r.items.length)
-  const tree = M.buildTree(r.items, [])
-  for (const id of ["apps", "system", "setup", "install", "remove", "update"]) assert.ok(tree.children.root.includes(id), id)
-  assert.ok(tree.children.root.includes("style") || tree.children.root.includes("appearance"))
 })

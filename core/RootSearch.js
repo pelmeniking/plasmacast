@@ -143,14 +143,14 @@ function appWindowKeys(entry) {
 }
 
 function menuCandidate(tree, item, guards, deps) {
-  var crumbs = deps.OmarchyMenu.breadcrumb(tree, item.id)
+  var crumbs = deps.MenuTree.breadcrumb(tree, item.id)
   var keywords = item.aliases.map(words).filter(function(k) { return k })
   if (item.title && item.title !== item.label) keywords.push(item.title)
   if (item.description) keywords.push(item.description)
   return {
-    id: "omarchy:" + item.id,
+    id: "menu:" + item.id,
     type: "command",
-    kind: item.kind === "action" ? "omarchy-action" : (item.kind === "link" ? "omarchy-link" : "omarchy-menu"),
+    kind: item.kind === "action" ? "menu-action" : (item.kind === "link" ? "menu-link" : "menu-submenu"),
     title: item.label,
     subtitle: crumbs.length > 0 ? crumbs.join(" › ") : "KDE",
     keywords: keywords,
@@ -192,12 +192,12 @@ function menuCandidates(tree, guards, providerItems, deps) {
   var out = []
   for (var i = 0; i < tree.order.length; i++) {
     var item = tree.items[tree.order[i]]
-    if (!deps.OmarchyMenu.isVisible(tree, guards, item.id)) continue
+    if (!deps.MenuTree.isVisible(tree, guards, item.id)) continue
     out.push(menuCandidate(tree, item, guards, deps))
   }
   var extra = providerItems || {}
   for (var menuId in extra) {
-    if (!tree.items[menuId] || !deps.OmarchyMenu.isVisible(tree, guards, menuId)) continue
+    if (!tree.items[menuId] || !deps.MenuTree.isVisible(tree, guards, menuId)) continue
     for (var j = 0; j < extra[menuId].length; j++) {
       var row = extra[menuId][j]
       var withTree = { items: tree.items, order: tree.order, children: tree.children }
@@ -373,7 +373,7 @@ function rootSections(candidates, query, ctx, deps) {
 }
 
 function submenuSections(candidates, menuId, query, ctx, deps) {
-  var prefix = "omarchy:" + menuId + "."
+  var prefix = "menu:" + menuId + "."
   var q = String(query || "").trim()
   var inside = []
   for (var i = 0; i < candidates.length; i++) {
@@ -409,9 +409,9 @@ function actionsFor(candidate) {
   var list = []
   switch (candidate.kind) {
     case "app": primary = { id: "open", title: "Open Application", icon: "" }; break
-    case "omarchy-action": primary = { id: "open", title: "Run", icon: "" }; break
-    case "omarchy-menu":
-    case "omarchy-link": primary = { id: "open", title: "Open Menu", icon: "" }; break
+    case "menu-action": primary = { id: "open", title: "Run", icon: "" }; break
+    case "menu-submenu":
+    case "menu-link": primary = { id: "open", title: "Open Menu", icon: "" }; break
     case "fallback": primary = { id: "open", title: candidate.title, icon: "" }; break
     default: primary = { id: "open", title: "Open Command", icon: "" }
   }
@@ -423,7 +423,7 @@ function actionsFor(candidate) {
 
   if (candidate.kind === "app") list.push({ id: "open-new", title: "Open New Window", shortcut: "Shift ↵", section: "primary", icon: "" })
   if (candidate.kind === "app") list.push({ id: "copy-id", title: "Copy Desktop ID", shortcut: "Ctrl Shift C", section: "copy", icon: "" })
-  if (candidate.kind === "omarchy-action") list.push({ id: "copy-command", title: "Copy Command", shortcut: "Ctrl Shift C", section: "copy", icon: "" })
+  if (candidate.kind === "menu-action") list.push({ id: "copy-command", title: "Copy Command", shortcut: "Ctrl Shift C", section: "copy", icon: "" })
 
   if (candidate.favoriteOrder === null || candidate.favoriteOrder === undefined) {
     list.push({ id: "favorite-add", title: "Add to Favorites", shortcut: "Ctrl Shift F", section: "favorites", icon: "" })
@@ -478,9 +478,9 @@ function missingArgument(defs, values) {
 // you sure you want to shut down?", ref 04 §1) [O]. Omarchy's own scripts
 // don't confirm.
 var CONFIRMATIONS = {
-  "omarchy:system.shutdown": { title: "Shut Down", message: "Are you sure you want to shut down?", primary: "Shut Down" },
-  "omarchy:system.reboot": { title: "Restart", message: "Are you sure you want to restart?", primary: "Restart" },
-  "omarchy:system.logout": { title: "Log Out", message: "Are you sure you want to log out?", primary: "Log Out" }
+  "menu:system.shutdown": { title: "Shut Down", message: "Are you sure you want to shut down?", primary: "Shut Down" },
+  "menu:system.reboot": { title: "Restart", message: "Are you sure you want to restart?", primary: "Restart" },
+  "menu:system.logout": { title: "Log Out", message: "Are you sure you want to log out?", primary: "Log Out" }
 }
 
 function confirmationFor(id, action) {
@@ -514,8 +514,8 @@ function aboutFor(c, nowMs) {
   if (c.terminal) add("Command", c.command)
   add("ID", c.id)
   if (c.kind === "app") add("Desktop Entry", c.appId + ".desktop")
-  if (c.kind === "omarchy-action") add("Command", c.action)
-  if (c.kind === "omarchy-link") add("Opens", c.target)
+  if (c.kind === "menu-action") add("Command", c.action)
+  if (c.kind === "menu-link") add("Opens", c.target)
   add("URL", c.url || (c.run && c.run.url))
   add("Arguments", (c.arguments || []).map(function(a) { return a.name + (a.required ? "" : " (optional)") }).join(", "))
   add("Keywords", (c.keywords || []).join(", "))

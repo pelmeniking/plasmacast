@@ -1,8 +1,8 @@
-// plasmacast's KDE actions, in the same format as Omarchy's omarchy-menu.jsonc.
+// plasmacast's KDE actions (the format comes from Omarchy's menu file).
 //
 // Ids nest with dots (system.lock lives in the System menu). Each entry has a
 // label and either an "action" (a bash command), a "provider" (a dynamic
-// submenu from core/OmarchyMenu.js) or nothing (then it is a menu).
+// submenu from core/MenuTree.js) or nothing (then it is a menu).
 // "iconName" is a freedesktop/Breeze icon name; "aliases" are extra search
 // words; "when" is a bash test that hides the entry when it fails.
 //

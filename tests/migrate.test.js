@@ -98,3 +98,39 @@ test("config rejects out-of-range calculator values and unknown choices", () => 
   assert.equal(Schema.withConfigDefaults({ rootFilter: "no" }).rootFilter, true)
   assert.deepEqual(Schema.generalChoices.navigationBindings, ["emacs", "vim-motions"])
 })
+
+test("stored omarchy: ids become menu: ids, and nothing else changes", () => {
+  const settings = {
+    schemaVersion: 1,
+    general: { windowMode: "compact", theme: "omarchy" },
+    commands: {
+      "omarchy:system.lock": { alias: "l", favoriteOrder: 0 },
+      "app:firefox": { enabled: false }
+    }
+  }
+  const s = Migrate.migrate(settings, Schema.settingsMigrations, 1).doc
+  assert.deepEqual(s.commands, {
+    "app:firefox": { enabled: false },
+    "menu:system.lock": { alias: "l", favoriteOrder: 0 }
+  })
+  assert.deepEqual(s.general, { windowMode: "compact" })
+  assert.equal(s.schemaVersion, 2)
+
+  const frecency = { schemaVersion: 1, searchHistory: ["lock"], items: { "omarchy:system.lock": { visits: 3 }, "app:firefox": { visits: 1 } } }
+  const f = Migrate.migrate(frecency, Schema.frecencyMigrations, 1).doc
+  assert.deepEqual(f.items, { "app:firefox": { visits: 1 }, "menu:system.lock": { visits: 3 } })
+  assert.deepEqual(f.searchHistory, ["lock"])
+})
+
+test("an entry already under the new id is kept over the old one", () => {
+  const doc = { schemaVersion: 1, items: { "omarchy:a": { visits: 1 }, "menu:a": { visits: 9 } }, searchHistory: [] }
+  assert.deepEqual(Migrate.migrate(doc, Schema.frecencyMigrations, 1).doc.items, { "menu:a": { visits: 9 } })
+})
+
+test("plasmacast run still accepts the old prefix", () => {
+  assert.equal(Schema.currentId("omarchy:system.lock"), "menu:system.lock")
+  assert.equal(Schema.currentId("menu:system.lock"), "menu:system.lock")
+  assert.equal(Schema.currentId("app:omarchy:x"), "app:omarchy:x")
+  const launcher = require("node:fs").readFileSync(require("node:path").join(__dirname, "../Launcher.qml"), "utf8")
+  assert.match(launcher, /commandId = Schema\.currentId\(commandId\)/)
+})

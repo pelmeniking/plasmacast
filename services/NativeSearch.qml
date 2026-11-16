@@ -7,7 +7,7 @@ Item {
   id: service
   property var entries: []
   property var ids: []
-  // Standalone (KDE) runs serve QML as qs:@/… URLs; see OmarchyMenuSource.
+  // Standalone (KDE) runs serve QML as qs:@/… URLs; see MenuSource.
   property string executable: {
     var url = Qt.resolvedUrl("../bin/plasmacast-search").toString()
     return /^file:\/\//.test(url) ? decodeURIComponent(url.slice(7)) : Quickshell.shellPath("bin/plasmacast-search")

@@ -9,7 +9,7 @@ import "core/Schema.js" as Schema
 import "core/Ranker.js" as Ranker
 import "core/FleaSearch.js" as FleaSearch
 import "core/Frecency.js" as Frecency
-import "core/OmarchyMenu.js" as OmarchyMenu
+import "core/MenuTree.js" as MenuTree
 import "core/RootSearch.js" as RootSearch
 import "core/Calculator.js" as Calculator
 import "services"
@@ -27,7 +27,7 @@ Item {
 
   readonly property var registry: Rpc.createRegistry()
   readonly property double startedAt: Date.now()
-  readonly property var deps: ({ Ranker: Ranker, Frecency: Frecency, OmarchyMenu: OmarchyMenu })
+  readonly property var deps: ({ Ranker: Ranker, Frecency: Frecency, MenuTree: MenuTree })
 
   // Search engines and fallbacks from config.json; see RootSearch.searchEngines.
   readonly property var engines: RootSearch.searchEngines(backend.config.searchEngines, function(text) {
@@ -293,7 +293,7 @@ Item {
   }
 
   function openMenu(item) {
-    if (item.provider && !OmarchyMenu.PROVIDERS[item.provider])
+    if (item.provider && !MenuTree.PROVIDERS[item.provider])
       return { toast: { style: "failure", title: "Unknown menu provider " + item.provider } }
     return { push: { kind: "menu", menuId: item.id, title: item.label } }
   }
@@ -320,15 +320,15 @@ Item {
           backend.recordVisit(id, query)
           appFocuser.open(candidate)
           return { close: true }
-        case "omarchy-action":
+        case "menu-action":
           if (candidate.disabled) return { toast: { style: "failure", title: candidate.title + " is already set up" } }
           backend.recordVisit(id, query)
           backend.runShell(candidate.action)
           return { close: true }
-        case "omarchy-menu":
+        case "menu-submenu":
           backend.recordVisit(id, query)
           return backend.openMenu(menuSource.tree.items[candidate.menuId])
-        case "omarchy-link":
+        case "menu-link":
           backend.recordVisit(id, query)
           var target = menuSource.tree.items[candidate.target]
           if (!target) return { toast: { style: "failure", title: "Menu " + candidate.target + " not found" } }
@@ -630,10 +630,10 @@ Item {
     }
   }
 
-  OmarchyMenuSource {
+  MenuSource {
     id: menuSource
     onRevisionChanged: rebuildTimer.restart()
-    onMessage: function(level, text, metadata) { backend.log(level, "omarchy-menu", text, metadata) }
+    onMessage: function(level, text, metadata) { backend.log(level, "menu", text, metadata) }
   }
 
   JsonStore {

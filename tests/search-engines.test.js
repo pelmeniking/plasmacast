@@ -8,10 +8,10 @@ const RS = require("../core/RootSearch.js")
 const Schema = require("../core/Schema.js")
 const Ranker = require("../core/Ranker.js")
 const Frecency = require("../core/Frecency.js")
-const OmarchyMenu = require("../core/OmarchyMenu.js")
+const MenuTree = require("../core/MenuTree.js")
 
 const root = path.join(__dirname, "..")
-const deps = { Ranker, Frecency, OmarchyMenu }
+const deps = { Ranker, Frecency, MenuTree }
 const DDG = { title: "DuckDuckGo", url: "https://duckduckgo.com/?q={query}", keywords: ["ddg"] }
 const GOOGLE = { title: "Google", url: "https://www.google.com/search?q={query}" }
 

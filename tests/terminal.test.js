@@ -7,10 +7,10 @@ const { spawnSync } = require("node:child_process")
 const RS = require("../core/RootSearch.js")
 const Ranker = require("../core/Ranker.js")
 const Frecency = require("../core/Frecency.js")
-const OmarchyMenu = require("../core/OmarchyMenu.js")
+const MenuTree = require("../core/MenuTree.js")
 
 const root = path.join(__dirname, "..")
-const deps = { Ranker, Frecency, OmarchyMenu }
+const deps = { Ranker, Frecency, MenuTree }
 const ctx = (extra) => Object.assign({ commands: {}, frecency: {}, nowMs: Date.now(), executables: { ping: true, ls: true } }, extra)
 const fallbackTitles = (query, c) => {
   const sections = RS.rootSections([], query, c || ctx(), deps)

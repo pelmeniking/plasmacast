@@ -39,7 +39,7 @@ test("the backend records config and menu errors and clears them again", () => {
   assert.match(backend, /backend\.configError = String\(e && e\.message \|\| e\)/)
   assert.equal(backend.match(/backend\.configError = ""/g).length, 2, "cleared on a good load and on a missing file")
   assert.match(backend, /menu: menuSource\.userError/)
-  assert.match(read("services/OmarchyMenuSource.qml"), /source\.userError = parsed\.error/)
+  assert.match(read("services/MenuSource.qml"), /source\.userError = parsed\.error/)
 })
 
 test("the launcher shows the problem as a failure toast when it opens", () => {

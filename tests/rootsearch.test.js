@@ -2,10 +2,10 @@ const test = require("node:test")
 const assert = require("node:assert/strict")
 const Ranker = require("../core/Ranker.js")
 const Frecency = require("../core/Frecency.js")
-const OmarchyMenu = require("../core/OmarchyMenu.js")
+const MenuTree = require("../core/MenuTree.js")
 const RS = require("../core/RootSearch.js")
 
-const deps = { Ranker, Frecency, OmarchyMenu }
+const deps = { Ranker, Frecency, MenuTree }
 const NOW = Date.UTC(2026, 9, 19, 12)
 
 const apps = ["firefox", "chromium", "signal-desktop", "org.gnome.Nautilus", "Alacritty", "libreoffice-writer"].map((id) => ({
@@ -16,7 +16,7 @@ const apps = ["firefox", "chromium", "signal-desktop", "org.gnome.Nautilus", "Al
   icon: id
 }))
 
-const menu = OmarchyMenu.buildTree(OmarchyMenu.parse(`{
+const menu = MenuTree.buildTree(MenuTree.parse(`{
   "system": {"label":"System"},
   "system.lock": {"icon":"l","label":"Lock","action":"omarchy-system-lock"},
   "system.shutdown": {"label":"Shutdown","action":"omarchy-system shutdown"},
@@ -76,12 +76,12 @@ test("deep Omarchy items only appear while searching, with breadcrumbs", () => {
   const night = results("nightlight")[0].rows[0].candidate
   assert.equal(night.title, "Nightlight")
   assert.equal(night.subtitle, "Trigger › Toggle")
-  assert.equal(night.kind, "omarchy-action")
+  assert.equal(night.kind, "menu-action")
 })
 
 test("empty root: favorites, suggestions, commands, applications", () => {
   const c = ctx({
-    commands: { "omarchy:system.lock": { favoriteOrder: 0 } },
+    commands: { "menu:system.lock": { favoriteOrder: 0 } },
     frecency: { "app:signal-desktop": Frecency.recordVisit(null, NOW - 1000, "") }
   })
   const sections = results("", c)
@@ -106,7 +106,7 @@ test("a submenu lists its children, and searches its descendants", () => {
 })
 
 test("provider rows are searchable under their menu", () => {
-  const rows = OmarchyMenu.providerItems("style.font", "color-schemes", "Iosevka\tIosevka\tIosevka\n")
+  const rows = MenuTree.providerItems("style.font", "color-schemes", "Iosevka\tIosevka\tIosevka\n")
   const sections = RS.rootSections(candidates(null, { "style.font": rows }), "iosevka", ctx(), deps)
   const hit = sections[0].rows[0].candidate
   assert.equal(hit.title, "Iosevka")
@@ -119,7 +119,7 @@ test("actions: primary first, favourites and alias offered", () => {
   const ids = RS.actionsFor(app).map((a) => a.id)
   assert.equal(ids[0], "open")
   assert.ok(ids.includes("favorite-add") && ids.includes("set-alias") && ids.includes("copy-id"))
-  const menuItem = RS.decorate(candidates().find((c) => c.id === "omarchy:system.lock"), ctx(), deps)
+  const menuItem = RS.decorate(candidates().find((c) => c.id === "menu:system.lock"), ctx(), deps)
   // KDE: no stock Omarchy menu to hand off to.
   assert.deepEqual(RS.actionsFor(menuItem).slice(0, 2).map((a) => a.id), ["open", "copy-command"])
 })
@@ -155,9 +155,9 @@ test("the root filter narrows by type and drops calculator and fallbacks", () =>
 })
 
 test("power commands and delete-all ask for confirmation", () => {
-  assert.equal(RS.confirmationFor("omarchy:system.shutdown", "open").primary, "Shut Down")
-  assert.equal(RS.confirmationFor("omarchy:system.shutdown", "copy-command"), null)
-  assert.equal(RS.confirmationFor("omarchy:system.lock", "open"), null)
+  assert.equal(RS.confirmationFor("menu:system.shutdown", "open").primary, "Shut Down")
+  assert.equal(RS.confirmationFor("menu:system.shutdown", "copy-command"), null)
+  assert.equal(RS.confirmationFor("menu:system.lock", "open"), null)
   assert.ok(RS.confirmationFor("calculator-history:x", "delete-all-entries").destructive)
 })
 
@@ -165,7 +165,7 @@ test("the about panel describes a row", () => {
   const lock = results("lock")[0].rows[0].candidate
   const about = Object.fromEntries(RS.aboutFor(lock, NOW).map((r) => [r.label, r.value]))
   assert.equal(about.Command, "omarchy-system-lock")
-  assert.equal(about.ID, "omarchy:system.lock")
+  assert.equal(about.ID, "menu:system.lock")
   assert.equal(about.Location, "System")
   const calc = RS.aboutFor({ kind: "calculator", calcInput: "2+2", calcResult: "4", calcResultCaption: "Four" }, NOW)
   assert.deepEqual(calc.map((r) => r.label), ["Question", "Answer", "Type"])

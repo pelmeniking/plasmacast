@@ -1,4 +1,24 @@
 
+// Menu ids were "omarchy:<id>" while this was an Omarchy plugin; they are
+// "menu:<id>" now. Stored favourites, aliases and rankings are keyed by id.
+var OLD_MENU_PREFIX = "omarchy:"
+var MENU_PREFIX = "menu:"
+
+function currentId(id) {
+  id = String(id || "")
+  return id.indexOf(OLD_MENU_PREFIX) === 0 ? MENU_PREFIX + id.slice(OLD_MENU_PREFIX.length) : id
+}
+
+// An entry already stored under the new id wins over the old one.
+function renameMenuIds(map) {
+  var out = {}
+  if (!map || typeof map !== "object") return out
+  var key
+  for (key in map) if (key.indexOf(OLD_MENU_PREFIX) !== 0) out[key] = map[key]
+  for (key in map) if (key.indexOf(OLD_MENU_PREFIX) === 0 && !(currentId(key) in out)) out[currentId(key)] = map[key]
+  return out
+}
+
 var settingsMigrations = [
   {
     version: 1,
@@ -12,10 +32,18 @@ var settingsMigrations = [
         escapeKeyBehavior: "pop-back-or-close",
         navigationBindings: "emacs",
         rootSearchSensitivity: "medium",
-        uiZoom: 1,
-        theme: "omarchy"
+        uiZoom: 1
       }
       doc.commands = {}
+      return doc
+    }
+  },
+  {
+    version: 2,
+    name: "menu-ids",
+    up: function(doc) {
+      doc.commands = renameMenuIds(doc.commands)
+      if (doc.general) delete doc.general.theme     // never read
       return doc
     }
   }
@@ -28,6 +56,14 @@ var frecencyMigrations = [
     up: function(doc) {
       doc.items = {}
       doc.searchHistory = []
+      return doc
+    }
+  },
+  {
+    version: 2,
+    name: "menu-ids",
+    up: function(doc) {
+      doc.items = renameMenuIds(doc.items)
       return doc
     }
   }
@@ -136,6 +172,7 @@ if (typeof module !== "undefined") {
     pushSearchHistory: pushSearchHistory,
     SEARCH_HISTORY_LIMIT: SEARCH_HISTORY_LIMIT,
     documents: documents,
+    currentId: currentId,
     configDefaults: configDefaults,
     generalChoices: generalChoices,
     withConfigDefaults: withConfigDefaults,
