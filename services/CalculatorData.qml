@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell.Io
 import "../core/Calculator.js" as Calculator
 
-// Live inputs for core/Calculator.js: ECB exchange rates (SPEC §8: cached
+// Live inputs for core/Calculator.js: ECB exchange rates (upstream SPEC §8: cached
 // daily, frankfurter.dev) and the current UTC offset of every time zone the
 // calculator knows. QML's JS engine has no Intl, so one bash process asks
 // strftime for all of them (~40 ms).

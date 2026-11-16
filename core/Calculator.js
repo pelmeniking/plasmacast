@@ -1,4 +1,4 @@
-// The root-search calculator (SPEC §8 Calculator, ref 02 §3.3): the inline
+// The root-search calculator (upstream SPEC §8 Calculator, ref 02 §3.3): the inline
 // "Calculator" section. Raycast's engines (SoulverCore, calculator-rs) are
 // closed, so this is our own Soulver-flavoured evaluator [D]:
 //
@@ -1373,7 +1373,7 @@ function evaluate(query, env) {
   }
 }
 
-// History (SPEC §6.4 calculator_history): newest first, unique by query,
+// History (upstream SPEC §6.4 calculator_history): newest first, unique by query,
 // capped at Raycast's 4096 rows and its "last 3 months" window. [O]
 var HISTORY_LIMIT = 4096
 var HISTORY_MAX_AGE_MS = 90 * 864e5

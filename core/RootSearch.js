@@ -292,7 +292,7 @@ function fallbackRows(query, executables, fallbacks) {
   })
 }
 
-// The inline Calculator row (SPEC §7.2 "Calculator" section) for a
+// The inline Calculator row (upstream SPEC §7.2 "Calculator" section) for a
 // Calculator.evaluate() result. Not a stored candidate: its actions re-run
 // the query.
 var CALCULATOR_ID = "calculator:result"
@@ -416,7 +416,7 @@ function submenuSections(candidates, menuId, query, ctx, deps) {
 
 function actionsFor(candidate) {
   if (candidate.kind === "calculator" || candidate.kind === "calculator-history") {
-    // ↵ copies, Ctrl ↵ pastes (SPEC §8 Calculator) [O]; delete keys are
+    // ↵ copies, Ctrl ↵ pastes (upstream SPEC §8 Calculator) [O]; delete keys are
     // the Windows `clear` shortcuts (ref 04 §2.8).
     var calc = [
       { id: "copy-answer", title: "Copy Answer", shortcut: "↵", section: "primary", icon: "" },

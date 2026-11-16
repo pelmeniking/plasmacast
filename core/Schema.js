@@ -33,7 +33,7 @@ var frecencyMigrations = [
   }
 ]
 
-// Calculator History (SPEC §6.4 calculator_history), capped and pruned by
+// Calculator History (upstream SPEC §6.4 calculator_history), capped and pruned by
 // Calculator.pushHistory.
 var calculatorMigrations = [
   {
@@ -67,7 +67,7 @@ var configDefaults = {
   logLevel: "info",
   keepVisibleOnFocusLoss: false,
   // Daily ECB reference rates from frankfurter.dev for currency conversion
-  // (SPEC §8 Calculator). The only network request plasmacast makes. [D]
+  // (upstream SPEC §8 Calculator). The only network request plasmacast makes. [D]
   currencyRates: true,
   // Calculator preferences named after Raycast's (ref 04 App. B) [O].
   remToPxRate: 16,

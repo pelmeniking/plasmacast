@@ -152,7 +152,7 @@ omacast is early. Search, ranking and the Omarchy integration are done. Coming n
 - [ ] Window management
 - [ ] Importing your `.rayconfig` from macOS
 
-The full plan is in [`SPEC.md`](SPEC.md).
+The full plan is `SPEC.md` in the upstream repository, [typecraft-dev/oma-cast](https://github.com/typecraft-dev/oma-cast).
 
 ## Development
 
