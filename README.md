@@ -177,5 +177,5 @@ plasmacast log
 ## Credits and license
 
 Thanks to typecraft for omacast, which does the hard part. MIT, like omacast. `ui/PointerMoveGate.qml` and parts of `Commons/Util.qml` come from Omarchy's shell
-(MIT). plasmacast, like omacast, is a clean-room project: it isn't affiliated with Raycast and contains
-no Raycast code. It isn't affiliated with KDE e.V. either.
+(MIT). omacast was rebuilt from typecraft's analysis of how Raycast behaves, and plasmacast inherits
+that work. It contains no Raycast code and isn't affiliated with Raycast, nor with KDE e.V.

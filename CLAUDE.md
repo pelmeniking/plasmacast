@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+> **`reference/` is not part of this fork.** The tables and section pointers
+> below that name `reference/…` describe upstream's analysis notes; find them
+> in typecraft-dev/oma-cast if you need them.
+
 > **plasmacast: KDE fork of omacast.** Same code, renamed (CLI `plasmacast`,
 > IPC target and data dirs `plasmacast`; menu ids keep the `omarchy:` prefix
 > so frecency and favorites stay compatible). This checkout runs on KDE Plasma 6 as a standalone Quickshell

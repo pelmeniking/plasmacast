@@ -4,6 +4,8 @@
 **Target:** a clean-room, feature-equivalent launcher for **Arch Linux**, Wayland first (Hyprland → KDE → GNOME), with an X11 fallback.
 **Scope:** all Raycast features **except AI** (AI Chat, Quick AI, AI Commands, MCP, Screen Awareness, Browser-context-for-AI, "Ask X" commands, Dictate-to-AI, Remote). 
 
+> plasmacast note: the `reference/` folder this spec points into is not part of this fork; it lives upstream in typecraft-dev/oma-cast.
+
 This file is the plan. Claude Code should read it first. The `reference/` folder holds the detailed evidence (verbatim schemas, method lists, wire formats), and this spec points into it by section.
 
 | File | Contents |
